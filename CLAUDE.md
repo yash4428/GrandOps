@@ -81,16 +81,19 @@ Define these as `package.json` scripts in Phase 1 and keep this table accurate:
 | Task | Command |
 |---|---|
 | Install | `pnpm install` |
-| Dev server | `pnpm dev` |
-| Firestore emulator | `pnpm emulators` |
+| Dev server | `pnpm dev` (pin clock: `DEMO_NOW=2026-10-25T09:30:00+05:30`) |
+| Firestore emulator | `pnpm emulators` (then `DATA_BACKEND=firestore FIRESTORE_EMULATOR_HOST=127.0.0.1:8080`) |
 | Lint / typecheck | `pnpm lint` / `pnpm typecheck` |
-| Unit tests | `pnpm test` (impact-selected: `pnpm test:changed`) |
-| E2E | `pnpm e2e` |
-| Personas (all / one) | `pnpm personas` / `pnpm personas --project=kamla` |
+| Unit tests | `pnpm test` (impact-selected: `pnpm test:changed`; tier-2 coverage: `pnpm test:coverage`) |
+| E2E | `pnpm e2e` (needs `pnpm build` first) |
+| Personas (all / one) | `pnpm personas` / `pnpm exec playwright test --project=kamla` |
 | Build | `pnpm build` |
-| SCI report | `pnpm sci` |
-| Merge gate (dry run) | `pnpm gate --dry-run` |
-| Terraform | `cd infra/terraform && terraform fmt -check && terraform validate && terraform plan` |
+| i18n parity | `pnpm i18n-check` |
+| Flow YAML rules | `pnpm flow-lint` |
+| SCI report | `pnpm sci --dry-run` (needs GitLab API env) |
+| Merge gate (dry run) | `pnpm gate --dry-run` (needs MR env) |
+| Other CI scripts | `pnpm policy-check`, `carbon-gate`, `trust`, `chaos-guard --env production`, `pii-scan`, `canary-watch`, `release`, `incident`, `diary`, `audit`, `chaos-score` |
+| Terraform | `cd infra/terraform && tofu fmt -check && tofu validate && tofu plan` (`terraform` works too) |
 | CI lint | Validate `.gitlab-ci.yml` with `glab ci lint` (or the CI Lint API) before pushing |
 
 ## 6. Non-negotiable engineering rules

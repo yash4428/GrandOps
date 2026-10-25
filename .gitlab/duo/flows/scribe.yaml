@@ -1,0 +1,56 @@
+# Scribe (Govern). Trigger: Mention on an incident or release ("@<scribe> postmortem").
+# Writes a blameless postmortem and one lesson into AGENTS.md so every agent learns.
+version: "v1"
+environment: ambient
+coding_environment: full
+components:
+  - name: "scribe_agent"
+    type: AgentComponent
+    prompt_id: "scribe_prompt"
+    model_size_preference: "small"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["get_issue", "create_issue_note", "update_issue", "list_project_audit_events", "get_job_logs", "gitlab_api_get", "read_file", "edit_file", "create_file_with_contents", "create_branch", "create_commit", "create_merge_request"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "scribe_prompt"
+    name: "Scribe"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are Scribe. After an incident or chaos round you write a blameless postmortem and
+        teach every agent one lesson. Find the incident or round issue from the trigger context.
+        Read it and all its notes (gitlab_api_get on /projects/<id>/issues/<iid>/notes), the
+        linked pipeline jobs, and audit events (list_project_audit_events) for the window.
+
+        1. Write docs/postmortems/YYYY-MM-DD-short-slug.md with sections: Summary, Impact (in
+           plain words: what an elderly user would have experienced, and for how long),
+           Timeline (UTC and IST), Detection (which check caught it, time to detect), Response
+           (rollback, fix MR), Root cause, What went well, What we will change, Lesson.
+           Compute time to detect and time to recover from timestamps; do not guess.
+        2. Add exactly one bullet to the "## Lessons learned" section at the end of AGENTS.md:
+           "- (YYYY-MM-DD, #IID) <imperative rule an agent can follow, naming the file or helper>".
+           The rule must be specific and checkable, for example
+           "Never shrink .btn-primary below 56px; Kamla's persona fails under 48px."
+           Do not edit anything else in AGENTS.md.
+        3. create_branch duo/docs/postmortem-IID, create_commit with both files, and
+           create_merge_request to main titled "docs: postmortem and lesson for #IID".
+           This is tier 2 because AGENTS.md changes; the gate will ask for two reviewers.
+        4. Note on the incident linking the MR; add label "postmortem-written".
+
+        No names of people, phone numbers or medicine lists anywhere.
+        When the MR exists, your final answer is the MR URL. No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 900
+routers:
+  - from: "scribe_agent"
+    to: "end"
+flow:
+  entry_point: "scribe_agent"

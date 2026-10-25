@@ -1,0 +1,9 @@
+# Human review required (also enforced by the merge gate for agent MRs).
+# TODO(Yash): replace @YASH_GITLAB_USERNAME with your GitLab username.
+/.autopilot/            @YASH_GITLAB_USERNAME
+/.gitlab-ci.yml         @YASH_GITLAB_USERNAME
+/ci/                    @YASH_GITLAB_USERNAME
+/infra/                 @YASH_GITLAB_USERNAME
+/LICENSE                @YASH_GITLAB_USERNAME
+/CODEOWNERS             @YASH_GITLAB_USERNAME
+/.gitlab/duo/           @YASH_GITLAB_USERNAME

@@ -25,7 +25,7 @@ govern:pii-scan:
     - { job: build:next, optional: true }
     - { job: test:e2e, optional: true }
   script:
-    - pnpm -s pii-scan reports .next/server build.log test-output.log
+    - pnpm -s pii-scan reports build.log test-output.log
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"

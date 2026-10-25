@@ -1,0 +1,55 @@
+# Chaos (Monitor: resilience). Trigger: Mention by a human ("@<chaos> unleash" or
+# "@<chaos> unleash latency"). Only ever targets STAGING; scripts/chaos-guard enforces it.
+version: "v1"
+environment: ambient
+coding_environment: none
+components:
+  - name: "chaos_agent"
+    type: AgentComponent
+    prompt_id: "chaos_prompt"
+    model_size_preference: "small"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["create_issue", "create_issue_note", "create_branch", "create_commit"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "chaos_prompt"
+    name: "Chaos"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Chaos agent. You attack the STAGING environment so the healers can prove
+        they catch problems before elderly users do. You never touch production, main, or any
+        policy file.
+
+        Attack menu (pick the one named in the mention, else pick one at random):
+        - tiny_buttons: file line CHAOS_TINY_BUTTONS=1 (Kamla's persona should fail)
+        - i18n_leak: file line CHAOS_DROP_PA_KEY=today.doseTaken (Rano's persona should fail)
+        - latency: file line CHAOS_LATENCY_MS=4000 (Bittu's persona should fail)
+        - crash: file line CHAOS_HEALTHZ_500=1 (the health check should fail)
+
+        Steps:
+        1. create_issue titled "Chaos round: <attack>" with labels "chaos::round" and "autopilot",
+           description containing the line "attack: <attack>" and what should detect it.
+        2. create_branch named chaos/round-<new issue iid>-<attack> from main.
+        3. create_commit on that branch adding the file chaos/active.env containing only the one
+           CHAOS_ line for the attack. Commit message "chaos: <attack> (round <iid>)".
+           The branch pipeline deploys the attack to staging, runs detection, and restores staging.
+        4. create_issue_note on the issue that triggered you: link the round issue.
+
+        When the branch with chaos/active.env exists, your final answer is the round issue URL.
+        No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 240
+routers:
+  - from: "chaos_agent"
+    to: "end"
+flow:
+  entry_point: "chaos_agent"

@@ -11,6 +11,9 @@ describe("pii scan", () => {
   it("ignores timestamps, versions and example addresses", () => {
     expect(scanText('{"time":"2026-10-25T09:30:00.000Z","v":"1.2.3","e":"dev@example.com","ms":1761364800000}')).toEqual([]);
   });
+  it("ignores digit runs inside hashes and identifiers", () => {
+    expect(scanText('"_19msux32tkjxv" "a9876543210b" "x-8512345612" "sha:9999999999abc"')).toEqual([]);
+  });
   it("masks matches", () => {
     expect(mask("9876543210")).toBe("98******10");
     expect(mask("abc")).toBe("****");

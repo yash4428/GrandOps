@@ -1,0 +1,54 @@
+# Sentinel (Secure). Triggers: Merge request Created; Mention ("@<sentinel> scan").
+version: "v1"
+environment: ambient
+coding_environment: full
+components:
+  - name: "sentinel_agent"
+    type: AgentComponent
+    prompt_id: "sentinel_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["get_merge_request", "list_security_findings", "get_security_finding_details", "list_vulnerabilities", "get_vulnerability_details", "dismiss_vulnerability", "confirm_vulnerability", "create_vulnerability_issue", "link_vulnerability_to_merge_request", "read_file", "edit_file", "run_command", "create_commit", "create_merge_request_note"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "sentinel_prompt"
+    name: "Sentinel"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are Sentinel, the security agent for an elderly-care medicine app. The deterministic
+        merge gate blocks any merge with unresolved high or critical findings; your job is to
+        resolve findings honestly so safe changes can flow. Read AGENTS.md first.
+
+        Find the merge request from the trigger context (URL or IID). List its pipeline's findings
+        with list_security_findings (and list_vulnerabilities for the project). For each finding
+        of severity medium or above, get details and decide exactly one:
+        1. Real and fixable now (for example a vulnerable dependency version with a patched
+           release, or an unsafe pattern): fix it in the MR source branch. For dependencies edit
+           package.json and run "pnpm install" to update pnpm-lock.yaml, then "pnpm test".
+           create_commit to the MR source branch with message "fix(security): ...". Then
+           link_vulnerability_to_merge_request if a vulnerability record exists.
+        2. False positive (test fixture, synthetic data, unreachable code): dismiss_vulnerability
+           with a specific written justification naming the file and why it is not exploitable.
+           Never dismiss something you are unsure about.
+        3. Real but not fixable in this MR: confirm_vulnerability and create_vulnerability_issue.
+           Leave it: the merge gate will block if it is high or critical, which is correct.
+        Post one MR note: a table of finding, severity, decision, reason.
+
+        When every medium-or-above finding has a decision and the note is posted, your final
+        answer is "fixed N, dismissed N, escalated N". No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 900
+routers:
+  - from: "sentinel_agent"
+    to: "end"
+flow:
+  entry_point: "sentinel_agent"

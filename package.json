@@ -34,7 +34,8 @@
     "policy-check": "tsx scripts/policy-check/index.ts",
     "release": "tsx scripts/release/index.ts",
     "incident": "tsx scripts/incident/index.ts",
-    "chaos-score": "tsx scripts/chaos/score.ts"
+    "chaos-score": "tsx scripts/chaos/score.ts",
+    "flow-lint": "tsx scripts/flow-lint/index.ts"
   },
   "dependencies": {
     "@google-cloud/firestore": "9.4.0",

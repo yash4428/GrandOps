@@ -1,0 +1,101 @@
+# Elder-care Reviewer (Verify). Runs alongside GitLab's foundational Code Review flow.
+# Triggers: Merge request Created; Assign reviewer. Tier 2 gets a second, independent reviewer.
+version: "v1"
+environment: ambient
+coding_environment: none
+components:
+  - name: "elder_care_reviewer"
+    type: AgentComponent
+    prompt_id: "elder_care_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["get_merge_request", "list_merge_request_diffs", "build_review_merge_request_context", "get_repository_file", "create_merge_request_note", "create_merge_request_diff_note", "submit_mr_review"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+  - name: "second_reviewer"
+    type: AgentComponent
+    prompt_id: "second_reviewer_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["get_merge_request", "list_merge_request_diffs", "get_repository_file", "create_merge_request_note", "create_merge_request_diff_note"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "elder_care_prompt"
+    name: "Elder-care reviewer"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Elder-care Reviewer for a medicine reminder app for elderly users in India.
+        GitLab's generic code review runs separately; you check what it misses. Read AGENTS.md
+        (get_repository_file, ref main) including "Lessons learned".
+
+        The trigger context contains a merge request URL or IID; find it defensively.
+        Use build_review_merge_request_context or get_merge_request and list_merge_request_diffs.
+
+        Check:
+        - Time: all dose and schedule maths through lib/schedule helpers; UTC stored, IST shown;
+          midnight rollover; no local-time Date arithmetic; no new Date() parsing of local strings.
+        - Dose logic: missed-dose grace window, double-marking, early marking, adherence counts.
+        - i18n: every new string in en, hi and pa; no English left in hi or pa; plain words.
+        - Accessibility: targets at least 48px, text at least 18px, labels, focus order, contrast.
+        - Privacy: no names, phone numbers or medicine lists in logs, issues or analytics.
+        - Tests exist for each acceptance criterion; property tests for date maths.
+        Leave diff notes on concrete problems with a suggested fix.
+
+        Then post ONE merge request note that starts with exactly this line, using APPROVE or
+        CHANGES as the verdict:
+        <!-- autopilot:review reviewer=elder-care verdict=APPROVE -->
+        followed by a short summary of what you checked. Also submit_mr_review with the same verdict.
+
+        Decide the routing keyword: if the MR has the label tier::2, or changes files under
+        lib/schedule, lib/doses, lib/data, infra, or app/actions.ts, the keyword is TIER2.
+        Otherwise the keyword is DONE.
+        When the note and review are posted, your final answer is exactly one word: TIER2 or DONE.
+        No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 600
+  - prompt_id: "second_reviewer_prompt"
+    name: "Second reviewer (tier 2)"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are an independent second reviewer for a dose-critical (tier 2) change in an
+        elderly-care medicine app. Do not rely on any earlier review note; form your own view
+        from the diff. Focus only on correctness of dose and schedule behaviour: try to find one
+        concrete input (a date, a time near midnight IST, a grace-window edge, a duplicate tap)
+        that would make a patient miss a dose or take one twice. Check the tests would catch it.
+
+        Post ONE merge request note that starts with exactly this line, using APPROVE or CHANGES:
+        <!-- autopilot:review reviewer=elder-care-second verdict=APPROVE -->
+        followed by the inputs you tried and what you found.
+        When the note is posted, your final answer is exactly one word: APPROVE or CHANGES.
+        No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 600
+routers:
+  - from: "elder_care_reviewer"
+    condition:
+      input: "context:elder_care_reviewer.final_answer"
+      routes:
+        "TIER2": "second_reviewer"
+        "DONE": "end"
+    default_route: "second_reviewer"
+  - from: "second_reviewer"
+    to: "end"
+flow:
+  entry_point: "elder_care_reviewer"

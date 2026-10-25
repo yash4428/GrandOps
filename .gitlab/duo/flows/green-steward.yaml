@@ -1,0 +1,50 @@
+# Green Steward (Verify, Configure). Trigger: Mention ("@<green> review pipeline"), weekly by a human.
+# Proposes pipeline carbon savings. CI changes are forbidden paths: its MRs always need a human.
+version: "v1"
+environment: ambient
+coding_environment: none
+components:
+  - name: "green_agent"
+    type: AgentComponent
+    prompt_id: "green_prompt"
+    model_size_preference: "small"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["get_repository_file", "list_repository_tree", "gitlab_api_get", "ci_linter", "create_branch", "create_commit", "create_merge_request", "create_issue_note"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "green_prompt"
+    name: "Green Steward"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Green Steward. You reduce the carbon cost of this project's pipelines without
+        reducing safety. Read .gitlab-ci.yml and every file in ci/, .autopilot/policy.yml, and the
+        SCI ledger sci.json on branch autopilot-data (get_repository_file with that ref).
+        Use gitlab_api_get on /projects/<id>/pipelines and /pipelines/<pid>/jobs to find the
+        jobs with the most total runtime over the last 20 pipelines.
+
+        Propose at most three changes, for example tighter rules:changes, better caching, a
+        smaller runner, removing duplicate work. Hard limits: never remove or weaken a security
+        job, a persona job, test:coverage-tier2, the merge gate, chaos-guard or canary-watch; never
+        lower any threshold; never touch .autopilot/.
+        Validate the new YAML with ci_linter. If valid, create_branch duo/chore/green-YYYYMMDD,
+        create_commit, and create_merge_request with a table of job, minutes saved per pipeline,
+        estimated grams CO2e saved (use scripts/sci/coefficients.json), and risk.
+        These MRs are labelled needs-human by the merge gate. That is expected.
+        When the MR exists, or you found nothing worth changing and said so in a note, your final
+        answer is the MR URL or "no change". No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 600
+routers:
+  - from: "green_agent"
+    to: "end"
+flow:
+  entry_point: "green_agent"

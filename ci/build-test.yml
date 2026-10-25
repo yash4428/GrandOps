@@ -126,3 +126,12 @@ test:e2e:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes: *app_changes
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+build:flow-lint:
+  extends: .node
+  stage: build
+  script: [pnpm -s flow-lint]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: [".gitlab/duo/**/*", "scripts/flow-lint/**/*"]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"

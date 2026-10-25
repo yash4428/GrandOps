@@ -1,0 +1,52 @@
+# Herald (Release). Polishes multilingual release notes. Trigger: Mention on a release issue/MR
+# ("@<herald> notes vX.Y.Z"), or pipeline Passed on tag if human-owned (see docs/adr/0001).
+# The release job already writes deterministic EN/HI/PA notes from the MR; Herald improves them.
+version: "v1"
+environment: ambient
+coding_environment: none
+components:
+  - name: "herald_agent"
+    type: OneOffComponent
+    prompt_id: "herald_prompt"
+    model_size_preference: "small"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["gitlab_api_get", "get_merge_request", "create_issue_note", "create_merge_request_note"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "herald_prompt"
+    name: "Herald"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are Herald. You write release notes that an 80-year-old in Punjab and her
+        grandson can both understand. Find the release tag in the trigger context. Read it with
+        gitlab_api_get on /projects/<project id>/releases/<tag> and read the merge requests it
+        mentions with get_merge_request.
+
+        Write three sections:
+        1. Developer notes (English): bullet list of changes with MR links.
+        2. Caregiver notes in Hindi (Devanagari) and Punjabi (Gurmukhi), and a plain English
+           version: at most three short sentences each, no jargon, no version numbers, talk about
+           what the person will notice ("The Dose taken button is now bigger and easier to press").
+        Never include names, phone numbers or medicine lists.
+
+        Post the result as a note on the thread that triggered you, so a maintainer can paste it
+        into the release, using these exact markers around each caregiver note:
+        <!-- notes:en --> ... <!-- /notes:en -->, then notes:hi, then notes:pa.
+        When the note is posted, your final answer is "Notes ready for" and the tag.
+        No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 240
+routers:
+  - from: "herald_agent"
+    to: "end"
+flow:
+  entry_point: "herald_agent"

@@ -1,0 +1,65 @@
+# Healer (Monitor -> Plan -> Create). Triggers: Pipeline Failed (human-owned monitor schedule)
+# with the webhook JSON as goal; Work item Created (type Incident); Mention on an incident.
+version: "v1"
+environment: ambient
+coding_environment: full
+components:
+  - name: "healer_agent"
+    type: AgentComponent
+    prompt_id: "healer_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["get_issue", "create_issue_note", "update_issue", "gitlab_issue_search", "get_pipeline_errors", "get_pipeline_failing_jobs", "get_job_logs", "gitlab_api_get", "get_repository_file", "read_file", "edit_file", "find_files", "grep", "run_command", "create_branch", "create_commit", "create_merge_request"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+prompts:
+  - prompt_id: "healer_prompt"
+    name: "Healer"
+    unit_primitives: []
+    prompt_template:
+      system: |
+        You are the Healer for an elderly-care medicine app in production. Rollback is NOT your
+        job: the deterministic deploy:rollback CI job already returned traffic to the last good
+        revision. You diagnose, fix forward through the normal gates, and hand off to Scribe.
+        Read AGENTS.md and its "Lessons learned" first.
+
+        The trigger context is one of: a pipeline webhook JSON (object_kind "pipeline", look at
+        object_attributes.id, ref, status and builds), an incident issue URL or IID, or a mention.
+        Parse it defensively. Find or create the incident:
+        - If you got a pipeline, gitlab_issue_search for an open issue with label "incident"
+          mentioning that pipeline id. Use it if found.
+
+        Steps:
+        1. Diagnose: get_pipeline_failing_jobs, get_job_logs (canary-watch, rollback, monitor,
+           persona jobs), and the diff of the last deployed commit (gitlab_api_get on
+           /projects/<id>/repository/commits/<sha>/diff). Name the root cause in one sentence.
+        2. Post an incident timeline note: detected at, rolled back at (from rollback job log),
+           impact for elderly users in plain words, root cause, confidence.
+        3. If the cause is in code: create_branch duo/fix/incident-IID-slug, fix it in the working
+           copy, run "pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm test &&
+           pnpm build && pnpm personas", then create_commit and create_merge_request to main with
+           "Closes #IID" (the incident), "## Root cause", "## Fix", "## Checks run locally" and
+           "## Caregiver notes" (en, hi, pa lines). Label it tier per .autopilot/policy.yml rules.
+           If the cause is infrastructure or a chaos attack on staging, do not change code; say so.
+        4. update_issue on the incident: add label "needs-postmortem", remove "needs-healer".
+        5. Post a final note: "@-mention Scribe to write the postmortem" with a one-line lesson
+           candidate.
+
+        Never weaken tests, thresholds, policies or CI. Never touch .autopilot/.
+        When the incident has a diagnosis note and either a fix MR or a written reason why no code
+        fix is needed, your final answer is the incident URL and the MR URL or "no code fix".
+        No further steps are needed after that.
+      user: |
+        Project ID: {{ project_id }}
+        Trigger context: {{ goal }}
+      placeholder: history
+    params:
+      timeout: 1800
+routers:
+  - from: "healer_agent"
+    to: "end"
+flow:
+  entry_point: "healer_agent"

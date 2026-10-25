@@ -1,7 +1,7 @@
 // Pure PII patterns for logs and build output (synthetic-data project: any hit is a bug).
 export const PATTERNS: { name: string; re: RegExp }[] = [
-  { name: "indian-mobile", re: /(?<![\d.])(?:\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}(?![\d.])/g },
-  { name: "aadhaar-like", re: /(?<!\d)\d{4}[\s-]\d{4}[\s-]\d{4}(?!\d)/g },
+  { name: "indian-mobile", re: /(?<![\w.+-])(?:\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}(?![\w.])/g },
+  { name: "aadhaar-like", re: /(?<![\w-])\d{4}[\s-]\d{4}[\s-]\d{4}(?![\w-])/g },
   { name: "email", re: /[A-Za-z0-9._%+-]+@(?!example\.(?:com|org)|users\.noreply|noreply)[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
 ];
 

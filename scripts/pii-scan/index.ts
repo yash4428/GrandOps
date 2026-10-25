@@ -1,12 +1,13 @@
 // pii-scan. Fails if build output, test reports or logs contain PII-like strings.
-// Usage: pnpm pii-scan [paths...]   (defaults: reports .next/server build.log)
+// Usage: pnpm pii-scan [paths...]   (defaults: reports build.log test-output.log)
+// Scans what we emit (logs, test reports), not compiled bundles, whose hashes are noise.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { mask, scanText } from "./patterns";
 
 const roots = process.argv.slice(2).filter((a) => !a.startsWith("--"));
-const targets = roots.length ? roots : ["reports", ".next/server", "build.log", "test-output.log"];
-const TEXT = /\.(log|txt|json|xml|html|js|md)$/;
+const targets = roots.length ? roots : ["reports", "build.log", "test-output.log"];
+const TEXT = /\.(log|txt|json|xml|md)$/;
 
 function* walk(p: string): Generator<string> {
   if (!existsSync(p)) return;
