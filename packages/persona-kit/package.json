@@ -1,0 +1,13 @@
+{
+  "name": "@autopilot/persona-kit",
+  "version": "0.1.0",
+  "description": "Deterministic accessibility checks modelled on elderly users (tremor, low vision, single-language readers).",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "peerDependencies": { "@playwright/test": ">=1.40" },
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "publishConfig": { "access": "public" }
+}

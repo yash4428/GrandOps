@@ -1,0 +1,176 @@
+{
+  "meta": {
+    "title": "My medicines",
+    "description": "Simple medicine reminders for elders and caregivers"
+  },
+  "nav": {
+    "label": "Main menu",
+    "today": "Today",
+    "medicines": "Medicines",
+    "caregiver": "Family",
+    "whatsNew": "What's new",
+    "skip": "Skip to main content"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "hi": "हिन्दी",
+    "pa": "ਪੰਜਾਬੀ",
+    "change": "Change"
+  },
+  "today": {
+    "title": "Today's medicines",
+    "date": "{date}",
+    "dueNow": "Take now",
+    "upcoming": "Later today",
+    "done": "Done today",
+    "missed": "Missed",
+    "doseTaken": "Dose taken",
+    "takenAt": "Taken at {time}",
+    "confirmed": "Saved. Well done!",
+    "tooEarly": "It is too early for this dose.",
+    "error": "Could not save. Please try again.",
+    "noDoses": "No medicines today.",
+    "at": "At {time}",
+    "doseCount": "{count, plural, one {# tablet} other {# tablets}}",
+    "allDone": "All of today's medicines are done."
+  },
+  "medicineNames": {
+    "bp": "Blood pressure tablet",
+    "sugar": "Sugar tablet",
+    "vitaminD": "Vitamin D",
+    "calcium": "Calcium"
+  },
+  "instructions": {
+    "afterFood": "After food",
+    "beforeFood": "Before food",
+    "withWater": "With a glass of water",
+    "bedtime": "At bedtime"
+  },
+  "colours": {
+    "white": "White tablet",
+    "yellow": "Yellow tablet",
+    "pink": "Pink tablet",
+    "blue": "Blue tablet"
+  },
+  "medicines": {
+    "title": "Medicines",
+    "intro": "These are the medicines and times set for today.",
+    "times": "Times",
+    "addTitle": "Add a medicine",
+    "name": "Medicine name",
+    "time": "Time",
+    "instruction": "When to take it",
+    "count": "How many tablets",
+    "colour": "Tablet colour",
+    "save": "Save medicine",
+    "saved": "Medicine saved.",
+    "invalid": "Please fill in the name and a time."
+  },
+  "caregiver": {
+    "title": "For family",
+    "intro": "How the last 7 days went.",
+    "adherence": "Medicines taken",
+    "percent": "{percent}%",
+    "noData": "No medicines were scheduled.",
+    "missedTitle": "Missed doses",
+    "noMissed": "No missed doses. Very good.",
+    "day": "Day",
+    "taken": "Taken",
+    "scheduled": "Planned",
+    "missedCount": "Missed"
+  },
+  "report": {
+    "button": "Something's wrong",
+    "title": "Tell us what is wrong",
+    "intro": "Choose one, or speak, or type. We will fix it.",
+    "reasons": "What is the problem?",
+    "cantPress": "Button is hard to press",
+    "cantRead": "Hard to read",
+    "wrongLanguage": "Wrong language",
+    "slow": "App is slow",
+    "wrongTime": "Wrong medicine time",
+    "other": "Something else",
+    "textLabel": "Tell us in your words (optional)",
+    "record": "Speak",
+    "stop": "Stop",
+    "recording": "Listening…",
+    "recorded": "Voice note ready.",
+    "noMic": "Voice is not available on this phone. Please type.",
+    "send": "Send",
+    "sending": "Sending…",
+    "thanks": "Thank you. We got your message.",
+    "thanksDetail": "Report number {id}. We will fix it soon.",
+    "error": "Could not send. Please try again.",
+    "back": "Back to today",
+    "privacy": "We do not send your name or your medicine list."
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "empty": "Nothing new yet.",
+    "version": "Version {version}",
+    "play": "Listen"
+  },
+  "missionControl": {
+    "title": "Mission Control",
+    "intro": "Agents running the delivery loop, live.",
+    "notConnected": "Not connected to GitLab. Set GITLAB_PROJECT_ID and a read token.",
+    "updated": "Updated {time}",
+    "ring": "Delivery stages",
+    "stage": {
+      "plan": "Plan",
+      "create": "Create",
+      "verify": "Verify",
+      "package": "Package",
+      "secure": "Secure",
+      "release": "Release",
+      "configure": "Configure",
+      "monitor": "Monitor",
+      "govern": "Govern"
+    },
+    "state": {
+      "idle": "Waiting",
+      "running": "Running",
+      "success": "Done",
+      "failed": "Failed"
+    },
+    "story": "Current story",
+    "noStory": "No story running.",
+    "timeline": "Latest actions",
+    "noEvents": "No actions yet.",
+    "personas": "Persona panel",
+    "persona": {
+      "kamla": "Kamla, hand tremor",
+      "harbans": "Harbans, low vision",
+      "rano": "Rano, reads Punjabi",
+      "mohan": "Mohan, screen reader",
+      "bittu": "Bittu's phone on 3G"
+    },
+    "pass": "Pass",
+    "fail": "Fail",
+    "unknown": "No result",
+    "sci": "Carbon per deploy",
+    "grams": "{grams} g CO₂e",
+    "baseline": "Baseline {grams} g CO₂e",
+    "saving": "{percent}% less than baseline",
+    "budget": "Monthly budget used",
+    "trust": "Agent trust",
+    "agent": "Agent",
+    "tier": "Tier {tier}",
+    "chaos": "Chaos vs healers",
+    "rounds": "Rounds",
+    "detected": "Detected",
+    "mttd": "Time to detect",
+    "mttr": "Time to recover",
+    "minutes": "{minutes} min",
+    "lessons": "Lessons learned",
+    "lessonsCount": "{count, plural, one {# lesson} other {# lessons}}",
+    "noLessons": "No lessons yet.",
+    "diary": "Overnight diary",
+    "noDiary": "No diary entry yet."
+  },
+  "errors": {
+    "notFound": "This page does not exist.",
+    "generic": "Something went wrong. Please try again."
+  }
+}

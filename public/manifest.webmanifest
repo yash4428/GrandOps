@@ -1,0 +1,9 @@
+{
+  "name": "My medicines",
+  "short_name": "Medicines",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b5d1e",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
