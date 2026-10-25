@@ -42,7 +42,7 @@ test.describe("core flows @e2e", () => {
     await page.goto("/");
     await page.getByTestId("report-button").click();
     await page.getByText("Button is hard to press").click();
-    await page.getByLabel("Tell us in your words (optional)").fill("Button too small, call 9876543210");
+    await page.getByLabel("Tell us in your words (optional)").fill("The button is too small");
     await page.getByRole("button", { name: "Send" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Thank you" })).toBeVisible();
   });

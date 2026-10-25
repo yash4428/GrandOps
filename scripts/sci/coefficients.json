@@ -1,0 +1,38 @@
+{
+  "_comment": "Every number here must be traceable to the cited source. Values marked verify:true must be checked against the source before submission. See docs/sustainability.md.",
+  "methodology": "Cloud Carbon Footprint (CCF) methodology, https://www.cloudcarbonfootprint.org/docs/methodology",
+  "sci_spec": "Green Software Foundation SCI, ISO/IEC 21031:2024",
+  "compute": {
+    "gcp_min_watts_per_vcpu": { "value": 0.71, "source": "CCF methodology, GCP min watts (SPECpower average)", "verify": true },
+    "gcp_max_watts_per_vcpu": { "value": 4.26, "source": "CCF methodology, GCP max watts (SPECpower average)", "verify": true },
+    "avg_cpu_utilisation": { "value": 0.5, "source": "CCF default assumption when utilisation is unknown", "verify": true },
+    "memory_kwh_per_gb_hour": { "value": 0.000392, "source": "CCF methodology, memory coefficient", "verify": true },
+    "pue_gcp": { "value": 1.1, "source": "CCF methodology, GCP PUE", "verify": true }
+  },
+  "grid_g_per_kwh": {
+    "us-east1": { "value": 560, "source": "Google Cloud region carbon data (grid gCO2eq/kWh)", "verify": true },
+    "asia-south1": { "value": 679, "source": "Google Cloud region carbon data (grid gCO2eq/kWh)", "verify": true }
+  },
+  "runner_region": { "value": "us-east1", "source": "Assumption: GitLab.com hosted Linux runners run on GCP us-east1. Documented as an assumption.", "verify": true },
+  "runner_types": {
+    "saas-linux-small-amd64": { "vcpu": 2, "memory_gb": 8 },
+    "saas-linux-medium-amd64": { "vcpu": 4, "memory_gb": 16 },
+    "saas-linux-large-amd64": { "vcpu": 8, "memory_gb": 32 },
+    "default": { "vcpu": 2, "memory_gb": 8 }
+  },
+  "embodied": {
+    "server_kgco2e": { "value": 1200, "source": "CCF methodology, embodied emissions per server (approximate)", "verify": true },
+    "server_vcpus": { "value": 64, "source": "Assumed host size for time-share", "verify": true },
+    "lifespan_years": { "value": 4, "source": "CCF default server lifespan", "verify": true }
+  },
+  "cloud_run": {
+    "vcpu": 1,
+    "memory_gb": 0.5,
+    "region": "asia-south1"
+  },
+  "llm": {
+    "_comment": "Reported separately as an uncertain line. Not included in the headline SCI.",
+    "kwh_per_session_low": { "value": 0.001, "source": "Order-of-magnitude bound, see docs/sustainability.md", "verify": true },
+    "kwh_per_session_high": { "value": 0.02, "source": "Order-of-magnitude bound, see docs/sustainability.md", "verify": true }
+  }
+}

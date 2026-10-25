@@ -1,0 +1,88 @@
+# Autopilot policy. Protected by CODEOWNERS. Agents may never edit this file:
+# any MR touching it is labelled needs-human and never auto-merged.
+version: 1
+
+# Risk tier = highest tier matched by any changed file. First matching list wins per file.
+tiers:
+  "2":
+    - "lib/schedule/**"
+    - "lib/doses/**"
+    - "lib/data/**"
+    - "app/actions.ts"
+    - "infra/**"
+    - "Dockerfile"
+    - ".gitlab-ci.yml"
+    - "ci/**"
+    - ".gitlab/**"
+    - ".autopilot/**"
+    - "AGENTS.md"
+    - "scripts/**"
+  "0":
+    - "docs/**"
+    - "**/*.md"
+    - "messages/**"
+    - "**/*.css"
+  "1":
+    - "**"
+default_tier: 1
+
+# Never auto-merged when changed by an agent. Humans must review.
+forbidden_paths:
+  - ".autopilot/**"
+  - "LICENSE"
+  - "CODEOWNERS"
+  - ".gitlab/CODEOWNERS"
+  - ".gitlab/security-policies/**"
+  - ".gitlab-ci.yml"
+  - "ci/**"
+
+# Usernames starting with this prefix are agent service accounts.
+agent_prefix: "ai-"
+
+# Jobs that must have succeeded in the MR pipeline, per tier. Glob patterns.
+# Tier minimums are a floor: trust and carbon mode may add checks, never remove these.
+required_jobs:
+  "0": ["build:lint", "build:typecheck", "test:unit", "persona:rano", "secret_detection"]
+  "1": ["build:*", "test:*", "persona:*", "secret_detection", "semgrep-sast"]
+  "2": ["build:*", "test:*", "persona:*", "secret_detection", "semgrep-sast", "test:coverage-tier2"]
+
+# Independent agent reviewers that must APPROVE, per tier.
+required_reviewers:
+  "0": []
+  "1": ["elder-care"]
+  "2": ["elder-care", "elder-care-second"]
+
+security:
+  block_severities: ["critical", "high"]
+
+canary:
+  # minutes watched and % of prod traffic on the canary revision
+  "0": { minutes: 5, percent: 10 }
+  "1": { minutes: 5, percent: 10 }
+  "2": { minutes: 15, percent: 10 }
+  slo:
+    max_error_rate: 0.01
+    max_p95_ms: 1500
+  # Trust adjustments. Tier 2 never goes below its base value.
+  high_trust: { score: 80, minutes_delta: -2 }
+  low_trust: { score: 30, minutes_delta: 5, extra_reviewer: "elder-care-second" }
+
+trust:
+  start: 50
+  merge_survived_24h: 5
+  rollback: -25
+  floor: 0
+  cap: 100
+
+carbon:
+  # Monthly budget in grams CO2e for all CI + deploys of this project.
+  monthly_budget_g: 2000
+  # CARBON_MODE by fraction of budget used so far this month.
+  lite_at: 0.75
+  defer_at: 0.95
+  # Never skipped regardless of mode.
+  never_skip_labels: ["medication-critical"]
+  never_skip_tiers: ["2"]
+
+chaos:
+  allowed_environments: ["staging"]

@@ -12,7 +12,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "emulators": "firebase emulators:start --only firestore --project demo-autopilot",
+    "emulators": "pnpm dlx firebase-tools@15.34.1 emulators:start --only firestore --project demo-autopilot",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -20,7 +20,6 @@
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test --project=e2e",
     "personas": "playwright test --project=kamla --project=harbans --project=rano --project=mohan --project=bittu",
-    "seed": "tsx scripts/seed.ts",
     "sci": "tsx scripts/sci/index.ts",
     "gate": "tsx scripts/merge-gate/index.ts",
     "carbon-gate": "tsx scripts/carbon-gate/index.ts",
@@ -31,7 +30,11 @@
     "pii-scan": "tsx scripts/pii-scan/index.ts",
     "i18n-check": "tsx scripts/i18n-check/index.ts",
     "persona-comment": "tsx scripts/persona-report/index.ts",
-    "canary-watch": "tsx scripts/canary/watch.ts"
+    "canary-watch": "tsx scripts/canary/watch.ts",
+    "policy-check": "tsx scripts/policy-check/index.ts",
+    "release": "tsx scripts/release/index.ts",
+    "incident": "tsx scripts/incident/index.ts",
+    "chaos-score": "tsx scripts/chaos/score.ts"
   },
   "dependencies": {
     "@google-cloud/firestore": "9.4.0",
