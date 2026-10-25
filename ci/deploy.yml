@@ -1,0 +1,121 @@
+# Release + Monitor. Pipelines deploy; agents never do. Rollback is deterministic.
+deploy:staging:
+  extends: .gcp
+  stage: review
+  needs: [package:image-gcp]
+  resource_group: staging
+  environment: { name: staging, url: $STAGING_URL }
+  script:
+    - gcloud run deploy app-staging --image "$AR_IMAGE" --region "$GCP_REGION" --quiet
+        --update-env-vars "APP_ENV=staging,APP_VERSION=$CI_COMMIT_SHORT_SHA"
+        --remove-env-vars "CHAOS_TINY_BUTTONS,CHAOS_DROP_PA_KEY,CHAOS_LATENCY_MS,CHAOS_HEALTHZ_500"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+verify:staging-smoke:
+  extends: .node
+  stage: verify-live
+  needs: [deploy:staging]
+  script:
+    - node -e "fetch(process.env.STAGING_URL+'/healthz').then(async r=>{const b=await r.json();console.log(r.status,b);if(!b.ok||b.version!==process.env.CI_COMMIT_SHORT_SHA)process.exit(1)})"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+# Personas against the real staging URL (Bittu's numbers here are real network numbers).
+verify:staging-personas:
+  extends: .playwright
+  stage: verify-live
+  needs: [deploy:staging]
+  variables: { CI: "true", BASE_URL: $STAGING_URL, JUNIT_FILE: reports/junit-live.xml, PERSONA_JSON: reports/playwright-live.json }
+  script:
+    - pnpm exec playwright test --project=kamla --project=harbans --project=rano --project=mohan --project=bittu
+  artifacts:
+    when: always
+    paths: [reports/, test-results/]
+    reports: { junit: reports/junit-live.xml }
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+deploy:chaos-guard:
+  extends: .node
+  stage: deploy
+  needs: [verify:staging-smoke, verify:staging-personas]
+  script:
+    - pnpm -s chaos-guard --env production
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+deploy:canary-prod:
+  extends: .gcp
+  stage: deploy
+  needs:
+    - deploy:chaos-guard
+    - { job: policy-check, artifacts: true }
+  resource_group: production
+  environment: { name: production, url: $PROD_URL, action: prepare }
+  script:
+    - PREV=$(gcloud run services describe app-prod --region "$GCP_REGION" --format='value(status.traffic[0].revisionName)')
+    - gcloud run deploy app-prod --image "$AR_IMAGE" --region "$GCP_REGION" --no-traffic --tag canary --quiet
+        --update-env-vars "APP_ENV=production,APP_VERSION=$CI_COMMIT_SHORT_SHA"
+    - CANARY_REV=$(gcloud run services describe app-prod --region "$GCP_REGION" --format='value(status.latestCreatedRevisionName)')
+    - gcloud run services update-traffic app-prod --region "$GCP_REGION" --to-tags "canary=${CANARY_PERCENT:-10}" --quiet
+    - CANARY_URL=$(gcloud run services describe app-prod --region "$GCP_REGION" --format=json | python3 -c "import json,sys;print([t['url'] for t in json.load(sys.stdin)['status']['traffic'] if t.get('tag')=='canary'][0])")
+    - printf "PREVIOUS_REVISION=%s\nCANARY_REVISION=%s\nCANARY_URL=%s\n" "$PREV" "$CANARY_REV" "$CANARY_URL" | tee deploy.env
+  artifacts:
+    reports: { dotenv: deploy.env }
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+deploy:canary-watch:
+  extends: .node
+  stage: deploy
+  needs:
+    - deploy:canary-prod
+    - { job: policy-check, artifacts: true }
+  timeout: 30m
+  script:
+    - echo "Watching canary for ${CANARY_MINUTES:-5} min (tier $RISK_TIER, trust ${AGENT_TRUST:-n/a})"
+    - pnpm -s canary-watch
+  artifacts:
+    when: always
+    paths: [canary-result.json]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+deploy:promote:
+  extends: .gcp
+  stage: deploy
+  needs: [deploy:canary-prod, deploy:canary-watch]
+  resource_group: production
+  environment: { name: production, url: $PROD_URL }
+  script:
+    - gcloud run services update-traffic app-prod --region "$GCP_REGION" --to-revisions "$CANARY_REVISION=100" --quiet
+    - gcloud run services update-traffic app-prod --region "$GCP_REGION" --remove-tags canary --quiet
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+deploy:rollback:
+  extends: .gcp
+  stage: deploy
+  needs: [deploy:canary-prod, deploy:canary-watch]
+  resource_group: production
+  environment: { name: production, url: $PROD_URL }
+  script:
+    - '[ -n "$PREVIOUS_REVISION" ] || { echo "No previous revision recorded; nothing to roll back."; exit 0; }'
+    - echo "Canary failed SLO. Routing 100% back to $PREVIOUS_REVISION."
+    - gcloud run services update-traffic app-prod --region "$GCP_REGION" --to-revisions "$PREVIOUS_REVISION=100" --quiet
+    - gcloud run services update-traffic app-prod --region "$GCP_REGION" --remove-tags canary --quiet || true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: on_failure
+
+deploy:rollback-incident:
+  extends: .node
+  stage: deploy
+  needs: [deploy:rollback, { job: deploy:canary-watch, artifacts: true }, { job: deploy:canary-prod, artifacts: true }]
+  script:
+    - pnpm -s incident
+    - pnpm -s trust --event rollback
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: on_failure

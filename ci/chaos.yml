@@ -1,0 +1,66 @@
+# Chaos rounds. The Chaos flow (started by a human @mention) pushes a branch chaos/<round> with
+# chaos/active.env. These jobs deploy that attack to STAGING ONLY, detect it with the personas,
+# then restore staging. The guard below makes production impossible by construction.
+chaos:guard:
+  extends: .node
+  stage: .pre
+  script:
+    - test -f chaos/active.env || { echo "chaos/active.env missing"; exit 1; }
+    - pnpm -s chaos-guard --env staging --env-file chaos/active.env
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^chaos\//
+
+chaos:attack-staging:
+  extends: .gcp
+  stage: review
+  needs: [chaos:guard]
+  resource_group: staging
+  environment: { name: staging, url: $STAGING_URL }
+  script:
+    - ENV_VARS=$(grep -E '^CHAOS_[A-Z0-9_]+=' chaos/active.env | paste -sd, -)
+    - echo "Attack: $ENV_VARS"
+    - gcloud run services update app-staging --region "$GCP_REGION" --update-env-vars "$ENV_VARS" --quiet
+    - date -u +%Y-%m-%dT%H:%M:%SZ > attack_at.txt
+  artifacts:
+    paths: [attack_at.txt]
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^chaos\//
+
+chaos:detect:
+  extends: .playwright
+  stage: verify-live
+  needs: [chaos:attack-staging]
+  variables: { CI: "true", BASE_URL: $STAGING_URL, JUNIT_FILE: reports/junit-chaos.xml, PERSONA_JSON: reports/playwright-chaos.json }
+  script:
+    - node -e "fetch(process.env.STAGING_URL+'/healthz').then(r=>{console.log('healthz',r.status);if(r.status!==200)process.exit(1)})"
+    - pnpm exec playwright test --project=kamla --project=rano --project=bittu --project=mohan
+  artifacts:
+    when: always
+    paths: [reports/, test-results/]
+    reports: { junit: reports/junit-chaos.xml }
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^chaos\//
+
+# Detection = chaos:detect failed. Label the round, record the time, restore staging (deterministic heal).
+chaos:heal:
+  extends: .gcp
+  stage: deploy
+  needs: [chaos:detect]
+  resource_group: staging
+  environment: { name: staging, url: $STAGING_URL }
+  script:
+    - gcloud run services update app-staging --region "$GCP_REGION" --remove-env-vars "CHAOS_TINY_BUTTONS,CHAOS_DROP_PA_KEY,CHAOS_LATENCY_MS,CHAOS_HEALTHZ_500" --quiet
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^chaos\//
+      when: on_failure
+
+chaos:record:
+  extends: .node
+  stage: release
+  needs: [{ job: chaos:heal, optional: true }, { job: chaos:detect, optional: true }]
+  script:
+    - pnpm -s tsx scripts/chaos/record.ts
+    - pnpm -s chaos-score
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^chaos\//
+      when: always

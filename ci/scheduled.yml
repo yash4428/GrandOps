@@ -1,0 +1,60 @@
+# Scheduled pipelines (owned by a human so Pipeline-event triggers can fire; see docs/adr/0001).
+# Set SCHEDULE_KIND on each schedule: monitor | nightly | diary | trust
+monitor:synthetic:
+  extends: .playwright
+  stage: verify-live
+  variables: { CI: "true", BASE_URL: $PROD_URL, JUNIT_FILE: reports/junit-monitor.xml, PERSONA_JSON: reports/playwright-monitor.json }
+  script:
+    - node -e "fetch(process.env.PROD_URL+'/healthz').then(r=>{console.log('healthz',r.status);if(r.status!==200)process.exit(1)})"
+    - pnpm exec playwright test --project=bittu --project=harbans
+  artifacts:
+    when: always
+    paths: [reports/]
+    reports: { junit: reports/junit-monitor.xml }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_KIND == "monitor"
+
+monitor:incident:
+  extends: .node
+  stage: deploy
+  needs: [monitor:synthetic]
+  variables:
+    INCIDENT_TITLE: "Synthetic monitor failed on production"
+  script:
+    - pnpm -s incident
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_KIND == "monitor"
+      when: on_failure
+
+nightly:full:
+  extends: .playwright
+  stage: test
+  variables: { CI: "true" }
+  script:
+    - !reference [.carbon-skippable, script]
+    - pnpm build
+    - pnpm test:coverage
+    - pnpm exec playwright test
+  artifacts:
+    when: always
+    paths: [reports/, playwright-report/]
+    reports: { junit: "reports/junit-*.xml" }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_KIND == "nightly"
+
+diary:daily:
+  extends: .node
+  stage: govern
+  script:
+    - pnpm -s diary
+    - pnpm -s chaos-score
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_KIND == "diary"
+
+trust:settle:
+  extends: .node
+  stage: govern
+  script:
+    - pnpm -s trust --event settle
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && ($SCHEDULE_KIND == "trust" || $SCHEDULE_KIND == "diary")

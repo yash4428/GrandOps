@@ -1,0 +1,74 @@
+# Configure stage. HCL in infra/terraform. GitLab-managed state over the http backend.
+.tf:
+  image: { name: $TF_IMAGE, entrypoint: [""] }
+  tags: [saas-linux-small-amd64]
+  id_tokens:
+    GCP_ID_TOKEN:
+      aud: "https://iam.googleapis.com/$GCP_WIF_PROVIDER"
+  variables:
+    TF_ROOT: infra/terraform
+    TF_STATE_NAME: default
+    TF_HTTP_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/$TF_STATE_NAME"
+    TF_HTTP_LOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/$TF_STATE_NAME/lock"
+    TF_HTTP_UNLOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/$TF_STATE_NAME/lock"
+    TF_HTTP_LOCK_METHOD: POST
+    TF_HTTP_UNLOCK_METHOD: DELETE
+    TF_HTTP_USERNAME: gitlab-ci-token
+    TF_HTTP_RETRY_WAIT_MIN: "5"
+    TF_VAR_project_id: $GCP_PROJECT_ID
+    TF_VAR_gitlab_project_path: $CI_PROJECT_PATH
+  before_script:
+    - export TF_HTTP_PASSWORD="$CI_JOB_TOKEN"
+    - echo "$GCP_ID_TOKEN" > /tmp/jwt
+    - |
+      cat > /tmp/gcp.json <<JSON
+      {"type":"external_account","audience":"//iam.googleapis.com/$GCP_WIF_PROVIDER","subject_token_type":"urn:ietf:params:oauth:token-type:jwt","token_url":"https://sts.googleapis.com/v1/token","credential_source":{"file":"/tmp/jwt"},"service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$GCP_DEPLOY_SA:generateAccessToken"}
+      JSON
+    - export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp.json
+    - cd "$TF_ROOT"
+    - tofu init -input=false
+
+terraform:validate:
+  extends: .tf
+  stage: build
+  interruptible: true
+  id_tokens: {}
+  before_script:
+    - cd infra/terraform
+    - tofu init -backend=false -input=false
+  script:
+    - tofu fmt -check -recursive
+    - tofu validate
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: ["infra/**/*"]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      changes: ["infra/**/*"]
+
+terraform:plan:
+  extends: .tf
+  stage: review
+  interruptible: true
+  script:
+    - tofu plan -input=false -out=plan.cache
+    - tofu show -json plan.cache | sed -n '1p' > plan.json
+  artifacts:
+    paths: [infra/terraform/plan.cache]
+    reports: { terraform: infra/terraform/plan.json }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $GCP_WIF_PROVIDER
+      changes: ["infra/**/*"]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule" && $GCP_WIF_PROVIDER
+      changes: ["infra/**/*"]
+
+terraform:apply:
+  extends: .tf
+  stage: review
+  needs: [terraform:plan]
+  resource_group: terraform
+  script:
+    - tofu apply -input=false plan.cache
+  environment: { name: infrastructure }
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule" && $GCP_WIF_PROVIDER
+      changes: ["infra/**/*"]

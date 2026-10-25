@@ -1,0 +1,40 @@
+policy-check:
+  extends: .node
+  stage: .pre
+  script:
+    - pnpm -s policy-check
+  artifacts:
+    reports: { dotenv: policy.env }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+carbon-gate:
+  extends: .node
+  stage: .pre
+  needs:
+    - job: policy-check
+      optional: true
+  script:
+    - pnpm -s carbon-gate
+  artifacts:
+    reports: { dotenv: carbon.env }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_KIND == "nightly"
+
+# Fill the pnpm cache once per lockfile so other jobs only pull it.
+cache:warm:
+  extends: .node
+  stage: .pre
+  cache:
+    - key: { files: [pnpm-lock.yaml] }
+      paths: [.pnpm-store]
+      policy: pull-push
+  script:
+    - echo "pnpm store warmed"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: [pnpm-lock.yaml]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

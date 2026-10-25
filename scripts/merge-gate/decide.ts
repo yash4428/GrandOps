@@ -49,12 +49,14 @@ export function decide(policy: Policy, input: GateInput): GateResult {
     ok: !agent || forbidden.length === 0,
   });
 
-  for (const pattern of policy.required_jobs[t]) {
-    const hits = input.jobs.filter((j) => matches(j.name, [pattern]));
-    const ok = hits.length > 0 && hits.every((j) => j.status === "success");
+  for (const raw of policy.required_jobs[t]) {
+    const optional = raw.startsWith("?");
+    const pattern = optional ? raw.slice(1) : raw;
+    const hits = input.jobs.filter((j) => matches(j.name, [pattern]) && !(optional && ["skipped", "manual", "created"].includes(j.status)));
+    const ok = (optional || hits.length > 0) && hits.every((j) => j.status === "success");
     rows.push({
       check: `Job ${pattern}`,
-      required: "success",
+      required: optional ? "success if run" : "success",
       actual: hits.length ? hits.map((j) => `${j.name}:${j.status}`).join(", ") : "missing",
       ok,
     });

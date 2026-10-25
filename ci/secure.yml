@@ -1,0 +1,26 @@
+# GitLab security templates, moved to the secure stage. Sentinel (Duo flow) reads their findings.
+semgrep-sast:
+  stage: secure
+  needs: []
+  interruptible: true
+
+secret_detection:
+  stage: secure
+  needs: []
+  interruptible: true
+
+gemnasium-dependency_scanning:
+  stage: secure
+  needs: []
+  interruptible: true
+
+container_scanning:
+  stage: package
+  needs: [package:image]
+  interruptible: true
+  variables:
+    CS_IMAGE: $IMAGE
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: ["Dockerfile", "package.json", "pnpm-lock.yaml"]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"

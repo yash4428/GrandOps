@@ -69,6 +69,12 @@ describe("decide", () => {
     expect(decide(policy, { ...base, changedFiles: ["ci/test.yml"] }).decision).toBe("needs-human");
     expect(decide(policy, { ...base, author: "yash", changedFiles: ["LICENSE"], verdicts: {} }).rows.find((r) => r.check === "Forbidden paths")!.ok).toBe(true);
   });
+  it("docs-only tier 0 needs only secret detection, but any job that ran must pass", () => {
+    const docs = { ...base, changedFiles: ["docs/agents.md"], verdicts: {}, jobs: [{ name: "secret_detection", status: "success" }] };
+    expect(decide(policy, docs).decision).toBe("merge");
+    expect(decide(policy, { ...docs, jobs: [...docs.jobs, { name: "build:lint", status: "failed" }] }).decision).toBe("blocked");
+    expect(decide(policy, { ...docs, jobs: [] }).decision).toBe("blocked");
+  });
   it("blocks on high or critical findings", () => {
     expect(decide(policy, { ...base, findings: { high: 1 } }).decision).toBe("blocked");
     expect(decide(policy, { ...base, findings: { medium: 3 } }).decision).toBe("merge");

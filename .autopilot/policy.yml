@@ -40,9 +40,10 @@ forbidden_paths:
 agent_prefix: "ai-"
 
 # Jobs that must have succeeded in the MR pipeline, per tier. Glob patterns.
+# "?pattern" = optional: if such a job ran it must pass (docs-only MRs skip the app jobs).
 # Tier minimums are a floor: trust and carbon mode may add checks, never remove these.
 required_jobs:
-  "0": ["build:lint", "build:typecheck", "test:unit", "persona:rano", "secret_detection"]
+  "0": ["secret_detection", "?build:*", "?test:*", "?persona:*"]
   "1": ["build:*", "test:*", "persona:*", "secret_detection", "semgrep-sast"]
   "2": ["build:*", "test:*", "persona:*", "secret_detection", "semgrep-sast", "test:coverage-tier2"]
 

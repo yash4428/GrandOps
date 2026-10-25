@@ -1,0 +1,72 @@
+release:create:
+  extends: .node
+  stage: release
+  needs: [deploy:promote]
+  script:
+    - pnpm -s release
+  artifacts:
+    reports: { dotenv: release.env }
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+govern:trust-update:
+  extends: .node
+  stage: govern
+  needs: [release:create]
+  script:
+    - pnpm -s trust --event merge
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+govern:pii-scan:
+  extends: .node
+  stage: govern
+  needs:
+    - { job: build:next, optional: true }
+    - { job: test:e2e, optional: true }
+  script:
+    - pnpm -s pii-scan reports .next/server build.log test-output.log
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+sci:report:
+  extends: .node
+  stage: .post
+  interruptible: false
+  dependencies: []
+  script:
+    - pnpm -s sci
+  artifacts:
+    when: always
+    paths: [reports/sci-report.json]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_PROFILE == "baseline"
+      when: always
+
+govern:audit-record:
+  extends: .node
+  stage: .post
+  needs: [release:create, sci:report]
+  script:
+    - pnpm -s audit
+  artifacts:
+    paths: [audit/releases/]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+# Deterministic policy gate. The only thing that merges agent MRs.
+autopilot:merge-gate:
+  extends: .node
+  stage: .post
+  interruptible: false
+  timeout: 40m
+  script:
+    - pnpm -s gate
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always

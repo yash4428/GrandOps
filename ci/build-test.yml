@@ -1,0 +1,128 @@
+.app-changes: &app_changes
+  - "app/**/*"
+  - "components/**/*"
+  - "lib/**/*"
+  - "messages/**/*"
+  - "public/**/*"
+  - "packages/**/*"
+  - "tests/**/*"
+  - "scripts/**/*"
+  - "package.json"
+  - "pnpm-lock.yaml"
+  - "*.config.*"
+  - "tsconfig.json"
+  - "Dockerfile"
+  - ".autopilot/**/*"
+  - ".gitlab-ci.yml"
+  - "ci/**/*"
+
+build:lint:
+  extends: .node
+  stage: build
+  script: [pnpm lint]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: *app_changes
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+build:typecheck:
+  extends: .node
+  stage: build
+  script: [pnpm typecheck]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: *app_changes
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+build:i18n:
+  extends: .node
+  stage: build
+  script: [pnpm -s i18n-check]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: ["messages/**/*", "app/**/*", "components/**/*"]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+build:next:
+  extends: .node
+  stage: build
+  variables:
+    APP_VERSION: $CI_COMMIT_SHORT_SHA
+  cache:
+    - key: { files: [pnpm-lock.yaml] }
+      paths: [.pnpm-store]
+      policy: pull
+    - key: next-build-$CI_COMMIT_REF_SLUG
+      paths: [.next/cache]
+      policy: pull-push
+  script:
+    - pnpm build 2>&1 | tee build.log
+  artifacts:
+    paths: [.next/, build.log]
+    exclude: [.next/cache/**/*]
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: *app_changes
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+test:unit:
+  extends: .node
+  stage: test
+  needs:
+    - { job: policy-check, optional: true }
+  variables: { CI: "true" }
+  script:
+    # Impact-selected on MRs for tier 0/1 (carbon saving); full suite on main and for tier 2.
+    - |
+      if [ -n "$CI_MERGE_REQUEST_IID" ] && [ "$RISK_TIER" != "2" ]; then
+        git fetch --depth=50 origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        pnpm vitest run --changed "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --passWithNoTests
+      else
+        pnpm test
+      fi
+  artifacts:
+    when: always
+    reports: { junit: reports/junit-unit.xml }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: *app_changes
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+# Tier 2 floor: dose/schedule logic keeps 100% branch coverage + property tests. Never skipped.
+test:coverage-tier2:
+  extends: .node
+  stage: test
+  needs: []
+  variables: { CI: "true" }
+  script:
+    - pnpm test:coverage
+  coverage: '/Branches\s*:\s*([\d.]+)%/'
+  artifacts:
+    when: always
+    reports:
+      junit: reports/junit-unit.xml
+      coverage_report: { coverage_format: cobertura, path: coverage/cobertura-coverage.xml }
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: *app_changes
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: ["infra/**/*", ".gitlab/**/*", "AGENTS.md"]
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+test:e2e:
+  extends: .playwright
+  stage: test
+  needs: [build:next]
+  variables: { CI: "true", JUNIT_FILE: reports/junit-e2e.xml, PERSONA_JSON: reports/playwright-e2e.json }
+  script:
+    - pnpm exec playwright test --project=e2e 2>&1 | tee test-output.log
+  artifacts:
+    when: always
+    paths: [reports/, playwright-report/, test-output.log]
+    reports: { junit: reports/junit-e2e.xml }
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: *app_changes
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"

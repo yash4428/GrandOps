@@ -1,0 +1,79 @@
+# Synthetic grandparents. Deterministic Playwright + axe-core. Zero AI credits.
+.persona:
+  extends: .playwright
+  stage: personas
+  needs: [build:next]
+  variables:
+    CI: "true"
+    JUNIT_FILE: reports/junit-$PERSONA.xml
+    PERSONA_JSON: reports/playwright-$PERSONA.json
+  script:
+    - pnpm exec playwright test --project=$PERSONA
+  artifacts:
+    when: always
+    paths: [reports/, test-results/, playwright-report/]
+    reports: { junit: reports/junit-$PERSONA.xml }
+    expire_in: 14 days
+
+persona:kamla:
+  extends: .persona
+  variables: { PERSONA: kamla }
+  rules: !reference [.persona-rules, rules]
+
+persona:harbans:
+  extends: .persona
+  variables: { PERSONA: harbans }
+  rules: !reference [.persona-rules, rules]
+
+persona:rano:
+  extends: .persona
+  variables: { PERSONA: rano }
+  rules: !reference [.persona-rules, rules]
+
+persona:mohan:
+  extends: .persona
+  variables: { PERSONA: mohan }
+  rules: !reference [.persona-rules, rules]
+
+persona:bittu:
+  extends: .persona
+  variables: { PERSONA: bittu }
+  rules: !reference [.persona-rules, rules]
+
+.persona-rules:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "app/**/*"
+        - "components/**/*"
+        - "lib/**/*"
+        - "messages/**/*"
+        - "public/**/*"
+        - "packages/persona-kit/**/*"
+        - "tests/personas/**/*"
+        - "package.json"
+        - "pnpm-lock.yaml"
+        - "next.config.ts"
+        - "playwright.config.ts"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+
+# One MR comment with a card per persona (plain language, screenshots linked).
+persona:report:
+  extends: .node
+  stage: personas
+  needs:
+    - { job: persona:kamla, optional: true }
+    - { job: persona:harbans, optional: true }
+    - { job: persona:rano, optional: true }
+    - { job: persona:mohan, optional: true }
+    - { job: persona:bittu, optional: true }
+  script:
+    - pnpm -s persona-comment
+  artifacts:
+    when: always
+    paths: [reports/personas-report.json]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
+      when: always

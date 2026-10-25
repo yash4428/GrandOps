@@ -1,0 +1,49 @@
+# Shared templates.
+.node:
+  image: $NODE_IMAGE
+  interruptible: true
+  tags: [saas-linux-small-amd64]
+  variables:
+    PNPM_STORE: "$CI_PROJECT_DIR/.pnpm-store"
+  cache:
+    - key: { files: [pnpm-lock.yaml] }
+      paths: [.pnpm-store]
+      policy: pull
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir "$PNPM_STORE"
+    - pnpm install --frozen-lockfile --prefer-offline
+
+.playwright:
+  extends: .node
+  image: $PLAYWRIGHT_IMAGE
+  cache:
+    - key: { files: [pnpm-lock.yaml] }
+      paths: [.pnpm-store]
+      policy: pull
+    - key: next-build-$CI_COMMIT_REF_SLUG
+      paths: [.next/cache]
+      policy: pull
+
+# Jobs a tier 0/1 change may skip when the monthly carbon budget is nearly spent (CARBON_MODE=lite|defer).
+# The carbon gate never sets lite/defer for tier 2 or medication-critical work.
+.carbon-skippable:
+  script:
+    - |
+      if [ "$CARBON_MODE" = "lite" ] || [ "$CARBON_MODE" = "defer" ]; then
+        echo "⏭ Skipped by carbon gate (CARBON_MODE=$CARBON_MODE, tier $RISK_TIER)"; exit 0
+      fi
+
+# GCP auth via OIDC id_token + Workload Identity Federation. No service-account keys.
+.gcp:
+  image: $GCLOUD_IMAGE
+  tags: [saas-linux-small-amd64]
+  id_tokens:
+    GCP_ID_TOKEN:
+      aud: "https://iam.googleapis.com/$GCP_WIF_PROVIDER"
+  before_script:
+    - echo "$GCP_ID_TOKEN" > .ci_job_jwt
+    - gcloud iam workload-identity-pools create-cred-config "$GCP_WIF_PROVIDER" --service-account="$GCP_DEPLOY_SA" --credential-source-file=.ci_job_jwt --output-file=.gcp_cred.json
+    - gcloud auth login --cred-file=.gcp_cred.json --quiet
+    - gcloud config set project "$GCP_PROJECT_ID"
+    - export AR_IMAGE="$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$AR_REPO/app:$CI_COMMIT_SHA"

@@ -1,0 +1,67 @@
+# Hands-off delivery pipeline. Stage order follows PRD §8.5.
+# Job names are stable: Mission Control, the SCI script and the merge gate parse them.
+stages:
+  - .pre
+  - build
+  - test
+  - personas
+  - secure
+  - package
+  - review
+  - verify-live
+  - deploy
+  - release
+  - govern
+  - .post
+
+workflow:
+  name: "$PIPELINE_NAME"
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_COMMIT_BRANCH == "autopilot-data"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables: { PIPELINE_NAME: "MR !$CI_MERGE_REQUEST_IID: $CI_MERGE_REQUEST_TITLE" }
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables: { PIPELINE_NAME: "Scheduled: $SCHEDULE_KIND" }
+    - if: $CI_COMMIT_BRANCH =~ /^chaos\//
+      variables: { PIPELINE_NAME: "Chaos round: $CI_COMMIT_BRANCH" }
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables: { PIPELINE_NAME: "Deliver: $CI_COMMIT_TITLE" }
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "web"
+      variables: { PIPELINE_NAME: "Manual: $CI_COMMIT_REF_NAME" }
+
+variables:
+  NODE_IMAGE: "node:24-bookworm-slim"
+  PLAYWRIGHT_IMAGE: "mcr.microsoft.com/playwright:v1.64.1-noble"
+  GCLOUD_IMAGE: "google/cloud-sdk:slim"
+  TF_IMAGE: "ghcr.io/opentofu/opentofu:1.10"
+  GCP_REGION: "asia-south1"
+  AR_REPO: "app"
+  IMAGE: "$CI_REGISTRY_IMAGE/app:$CI_COMMIT_SHA"
+  AUTOPILOT_DATA_BRANCH: "autopilot-data"
+  # Security templates: run in MR pipelines too.
+  AST_ENABLE_MR_PIPELINES: "true"
+  SECURE_LOG_LEVEL: "info"
+  CI_PROFILE: "smart"   # set to "baseline" on a manual run to measure the naive pipeline for SCI
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  - local: ci/base.yml
+  - local: ci/pre.yml
+  - local: ci/build-test.yml
+  - local: ci/personas.yml
+  - local: ci/secure.yml
+  - local: ci/package.yml
+  - local: ci/terraform.yml
+  - local: ci/deploy.yml
+  - local: ci/release-govern.yml
+  - local: ci/scheduled.yml
+  - local: ci/chaos.yml
