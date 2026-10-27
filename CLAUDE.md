@@ -6,7 +6,7 @@ Guidance for Claude Code working in this repository. **Read `PRD.md` before any 
 
 ## 1. What this project is (30-second version)
 
-`<PROJECT_NAME>` (placeholder; Yash will choose the real name, so **never invent or change the project name**) is our entry for **"Life After Code", the GitLab Transcend Hackathon** on Devpost.
+**GrandOps** (name chosen by Yash; don't change it) is our entry for **"Life After Code", the GitLab Transcend Hackathon** on Devpost.
 
 We are building a **hands-off, self-healing delivery loop on the GitLab Duo Agent Platform**. A team of Duo agents (custom flows) takes over everything after code is written: plan → create → verify → package → secure → release → configure → monitor → govern. It ships a small **medicine-reminder web app for elderly patients and caregivers in India** (`<APP_NAME>`, also a placeholder).
 

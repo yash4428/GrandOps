@@ -1,4 +1,4 @@
-# `<PROJECT_NAME>`
+# GrandOps
 
 **A hands-off, self-healing delivery loop on the GitLab Duo Agent Platform, for software that elderly people depend on.**
 
