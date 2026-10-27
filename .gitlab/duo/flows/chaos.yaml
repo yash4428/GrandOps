@@ -1,5 +1,5 @@
-# Chaos (Monitor: resilience). Trigger: Mention by a human ("@<chaos> unleash" or
-# "@<chaos> unleash latency"). Only ever targets STAGING; scripts/chaos-guard enforces it.
+# Chaos (Monitor: resilience). Trigger: Mention by a human ("@[chaos] unleash" or
+# "@[chaos] unleash latency"). Only ever targets STAGING; scripts/chaos-guard enforces it.
 version: "v1"
 environment: ambient
 coding_environment: none
@@ -32,11 +32,11 @@ prompts:
         - crash: file line CHAOS_HEALTHZ_500=1 (the health check should fail)
 
         Steps:
-        1. create_issue titled "Chaos round: <attack>" with labels "chaos::round" and "autopilot",
-           description containing the line "attack: <attack>" and what should detect it.
-        2. create_branch named chaos/round-<new issue iid>-<attack> from main.
+        1. create_issue titled "Chaos round: [attack]" with labels "chaos::round" and "autopilot",
+           description containing the line "attack: [attack]" and what should detect it.
+        2. create_branch named chaos/round-[new issue iid]-[attack] from main.
         3. create_commit on that branch adding the file chaos/active.env containing only the one
-           CHAOS_ line for the attack. Commit message "chaos: <attack> (round <iid>)".
+           CHAOS_ line for the attack. Commit message "chaos: [attack] (round [iid])".
            The branch pipeline deploys the attack to staging, runs detection, and restores staging.
         4. create_issue_note on the issue that triggered you: link the round issue.
 

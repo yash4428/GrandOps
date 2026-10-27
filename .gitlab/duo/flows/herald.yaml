@@ -36,7 +36,7 @@ prompts:
 
         Post the result as a note on the thread that triggered you, so a maintainer can paste it
         into the release, using these exact markers around each caregiver note:
-        <!-- notes:en --> ... <!-- /notes:en -->, then notes:hi, then notes:pa.
+        [notes:en] ... [/notes:en], then [notes:hi] ... [/notes:hi], then [notes:pa] ... [/notes:pa].
         When the note is posted, your final answer is "Notes ready for" and the tag.
         No further steps are needed after that.
       user: |

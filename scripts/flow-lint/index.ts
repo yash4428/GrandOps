@@ -40,6 +40,11 @@ export function lintFlow(file: string, text: string): string[] {
       if (p.params && "stop" in p.params) errs.push(`${pid}: stop not allowed in params`);
       if (p.prompt_template.placeholder !== "history") errs.push(`${pid}: placeholder: history required`);
       if (/\{\{|\{%|\{#/.test(p.prompt_template.system)) errs.push(`${pid}: Jinja braces in system prompt`);
+      // GitLab rejects prompts with HTML comments, markdown link comments or hidden unicode (SecurityException on save).
+      for (const part of [p.prompt_template.system, p.prompt_template.user]) {
+        if (/<!--|\[(?:\/\/|comment)\]:/.test(part)) errs.push(`${pid}: HTML/markdown comment in prompt`);
+        if (/[\u200B-\u200F\u2028-\u202E\u2060-\u2064\uFEFF\u00AD]/.test(part)) errs.push(`${pid}: hidden unicode in prompt`);
+      }
       if (!/final\s+answer\s+is[\s\S]*No further steps are needed after that\./.test(p.prompt_template.system)) errs.push(`${pid}: system prompt must end with an explicit stop instruction`);
       if (pid === c.prompt_id) {
         for (const v of p.prompt_template.user.matchAll(/\{\{\s*(\w+)\s*\}\}/g)) if (!aliases.has(v[1]!)) errs.push(`${pid}: {{ ${v[1]} }} has no matching input alias`);

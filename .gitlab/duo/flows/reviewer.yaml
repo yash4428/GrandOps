@@ -51,7 +51,7 @@ prompts:
 
         Then post ONE merge request note that starts with exactly this line, using APPROVE or
         CHANGES as the verdict:
-        <!-- autopilot:review reviewer=elder-care verdict=APPROVE -->
+        [autopilot:review reviewer=elder-care verdict=APPROVE]
         followed by a short summary of what you checked. Also submit_mr_review with the same verdict.
 
         Decide the routing keyword: if the MR has the label tier::2, or changes files under
@@ -77,7 +77,7 @@ prompts:
         that would make a patient miss a dose or take one twice. Check the tests would catch it.
 
         Post ONE merge request note that starts with exactly this line, using APPROVE or CHANGES:
-        <!-- autopilot:review reviewer=elder-care-second verdict=APPROVE -->
+        [autopilot:review reviewer=elder-care-second verdict=APPROVE]
         followed by the inputs you tried and what you found.
         When the note is posted, your final answer is exactly one word: APPROVE or CHANGES.
         No further steps are needed after that.

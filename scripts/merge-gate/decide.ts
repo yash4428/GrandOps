@@ -100,7 +100,8 @@ export function renderTable(result: GateResult): string {
   ].join("\n");
 }
 
-const MARKER = /<!--\s*autopilot:review\s+reviewer=([\w-]+)\s+verdict=(APPROVE|CHANGES)\s*-->/;
+// Visible `[autopilot:review …]` (Duo flow prompts may not contain HTML comments) or the hidden `<!-- … -->` form.
+const MARKER = /(?:<!--\s*|\[)autopilot:review\s+reviewer=([\w-]+)\s+verdict=(APPROVE|CHANGES)\s*(?:-->|\])/;
 
 /** Latest verdict per reviewer from MR notes written by agent accounts. Notes are newest-first. */
 export function verdictsFromNotes(policy: Policy, notes: { body: string; author: { username: string } }[]): GateInput["verdicts"] {

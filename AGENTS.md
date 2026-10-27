@@ -59,7 +59,7 @@ Closes #<issue>
 ## Review verdict marker (reviewers)
 
 Start your MR note with exactly one of:
-`<!-- autopilot:review reviewer=elder-care verdict=APPROVE -->` or `verdict=CHANGES`
+`[autopilot:review reviewer=elder-care verdict=APPROVE]` or `verdict=CHANGES`
 (`reviewer=elder-care-second` for the tier 2 second reviewer).
 
 ## Lessons learned

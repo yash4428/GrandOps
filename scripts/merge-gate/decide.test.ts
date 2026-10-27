@@ -93,4 +93,9 @@ describe("verdictsFromNotes", () => {
     ];
     expect(verdictsFromNotes(policy, notes)).toEqual({ "elder-care": "APPROVE" });
   });
+
+  it("reads the visible bracket marker that Duo flows post", () => {
+    const notes = [{ body: "[autopilot:review reviewer=elder-care-second verdict=CHANGES]\nTarget too small.", author: { username: "ai-elder-care-reviewer-x" } }];
+    expect(verdictsFromNotes(policy, notes)).toEqual({ "elder-care-second": "CHANGES" });
+  });
 });
