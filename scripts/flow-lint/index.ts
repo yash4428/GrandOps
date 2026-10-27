@@ -28,6 +28,12 @@ export function lintFlow(file: string, text: string): string[] {
     }
     const aliases = new Set((c.inputs ?? []).map((i) => i.as));
     const usesGitlab = (c.toolset ?? []).some((t) => GITLAB_TOOLS.test(t));
+    // Schema: OneOffComponent takes no model_size_preference and only these ui_log_events.
+    if (c.type === "OneOffComponent") {
+      const raw = c as unknown as Record<string, unknown>;
+      if ("model_size_preference" in raw) errs.push(`${c.name}: model_size_preference not allowed on OneOffComponent`);
+      for (const e of (raw.ui_log_events as string[] | undefined) ?? []) if (!["on_tool_call_input", "on_tool_execution_success", "on_tool_execution_failed"].includes(e)) errs.push(`${c.name}: ui_log_event ${e} not allowed on OneOffComponent`);
+    }
     if (usesGitlab && !(c.inputs ?? []).some((i) => i.from === "context:project_id" && i.as === "project_id")) errs.push(`${c.name}: GitLab tools need context:project_id as project_id`);
     for (const pid of [c.prompt_id, ...(c.subagents ?? []).map((s) => s.prompt_id)].filter(Boolean) as string[]) {
       const p = prompts.get(pid);

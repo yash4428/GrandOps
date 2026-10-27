@@ -6,7 +6,7 @@ environment: ambient
 coding_environment: none
 components:
   - name: "herald_agent"
-    type: OneOffComponent
+    type: AgentComponent
     prompt_id: "herald_prompt"
     model_size_preference: "small"
     inputs:
