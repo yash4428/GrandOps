@@ -10,6 +10,7 @@ deploy:staging:
         --update-env-vars "APP_ENV=staging,APP_VERSION=$CI_COMMIT_SHORT_SHA"
         --remove-env-vars "CHAOS_TINY_BUTTONS,CHAOS_DROP_PA_KEY,CHAOS_LATENCY_MS,CHAOS_HEALTHZ_500"
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 verify:staging-smoke:
@@ -19,6 +20,7 @@ verify:staging-smoke:
   script:
     - node -e "fetch(process.env.STAGING_URL+'/healthz').then(async r=>{const b=await r.json();console.log(r.status,b);if(!b.ok||b.version!==process.env.CI_COMMIT_SHORT_SHA)process.exit(1)})"
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 # Personas against the real staging URL (Bittu's numbers here are real network numbers).
@@ -34,6 +36,7 @@ verify:staging-personas:
     paths: [reports/, test-results/]
     reports: { junit: reports/junit-live.xml }
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 deploy:chaos-guard:
@@ -43,6 +46,7 @@ deploy:chaos-guard:
   script:
     - pnpm -s chaos-guard --env production
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 deploy:canary-prod:
@@ -64,6 +68,7 @@ deploy:canary-prod:
   artifacts:
     reports: { dotenv: deploy.env }
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 deploy:canary-watch:
@@ -80,6 +85,7 @@ deploy:canary-watch:
     when: always
     paths: [canary-result.json]
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 deploy:promote:
@@ -92,6 +98,7 @@ deploy:promote:
     - gcloud run services update-traffic app-prod --region "$GCP_REGION" --to-revisions "$CANARY_REVISION=100" --quiet
     - gcloud run services update-traffic app-prod --region "$GCP_REGION" --remove-tags canary --quiet
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 deploy:rollback:
@@ -106,6 +113,7 @@ deploy:rollback:
     - gcloud run services update-traffic app-prod --region "$GCP_REGION" --to-revisions "$PREVIOUS_REVISION=100" --quiet
     - gcloud run services update-traffic app-prod --region "$GCP_REGION" --remove-tags canary --quiet || true
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
       when: on_failure
 
@@ -117,5 +125,6 @@ deploy:rollback-incident:
     - pnpm -s incident
     - pnpm -s trust --event rollback
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
       when: on_failure

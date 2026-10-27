@@ -34,6 +34,12 @@
         echo "⏭ Skipped by carbon gate (CARBON_MODE=$CARBON_MODE, tier $RISK_TIER)"; exit 0
       fi
 
+# Jobs that talk to Google Cloud (or need a job that does). Skipped until the GCP CI variables exist.
+.needs-gcp:
+  rules:
+    - if: $GCP_WIF_PROVIDER == null || $GCP_WIF_PROVIDER == ""
+      when: never
+
 # GCP auth via OIDC id_token + Workload Identity Federation. No service-account keys.
 .gcp:
   image: $GCLOUD_IMAGE

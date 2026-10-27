@@ -2,7 +2,7 @@ node_modules/
 .next/
 out/
 coverage/
-reports/
+/reports/
 playwright-report/
 test-results/
 blob-report/

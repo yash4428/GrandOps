@@ -19,6 +19,8 @@ tofu apply -var project_id=<GCP_PROJECT_ID> -var gitlab_project_path=<group/proj
 
 Then copy the outputs into GitLab CI/CD variables: `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA`, `STAGING_URL`, `PROD_URL`, plus `GCP_PROJECT_ID`. Add secret values in Secret Manager (`gitlab-read-token`, `reports-issue-token`, `error-tracking-dsn`).
 
+Until `GCP_WIF_PROVIDER` is set, every job that needs Google Cloud (image push, staging/prod deploy, release, chaos) is skipped by the `.needs-gcp` rule in `ci/base.yml`, so `main` stays green.
+
 After bootstrap, `terraform:plan` runs on MRs and `terraform:apply` on `main` (changes under `infra/`).
 
 The HCL is plain Terraform. CI runs it with OpenTofu (MPL-2.0, OSI-approved) because Terraform ≥ 1.6 is BUSL. `terraform` works identically locally.

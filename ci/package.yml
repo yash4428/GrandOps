@@ -31,6 +31,7 @@ package:image-gcp:
     - apt-get update -qq && apt-get install -y -qq skopeo >/dev/null
     - skopeo copy --src-creds "$CI_REGISTRY_USER:$CI_JOB_TOKEN" --dest-creds "oauth2accesstoken:$(gcloud auth print-access-token)" "docker://$IMAGE" "docker://$AR_IMAGE"
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 package:sbom:

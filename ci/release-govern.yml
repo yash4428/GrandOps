@@ -7,6 +7,7 @@ release:create:
   artifacts:
     reports: { dotenv: release.env }
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 govern:trust-update:
@@ -16,6 +17,7 @@ govern:trust-update:
   script:
     - pnpm -s trust --event merge
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 govern:pii-scan:
@@ -57,6 +59,7 @@ govern:audit-record:
   artifacts:
     paths: [audit/releases/]
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"
 
 # Deterministic policy gate. The only thing that merges agent MRs.

@@ -8,6 +8,7 @@ chaos:guard:
     - test -f chaos/active.env || { echo "chaos/active.env missing"; exit 1; }
     - pnpm -s chaos-guard --env staging --env-file chaos/active.env
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH =~ /^chaos\//
 
 chaos:attack-staging:
@@ -24,6 +25,7 @@ chaos:attack-staging:
   artifacts:
     paths: [attack_at.txt]
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH =~ /^chaos\//
 
 chaos:detect:
@@ -39,6 +41,7 @@ chaos:detect:
     paths: [reports/, test-results/]
     reports: { junit: reports/junit-chaos.xml }
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH =~ /^chaos\//
 
 # Detection = chaos:detect failed. Label the round, record the time, restore staging (deterministic heal).
@@ -51,6 +54,7 @@ chaos:heal:
   script:
     - gcloud run services update app-staging --region "$GCP_REGION" --remove-env-vars "CHAOS_TINY_BUTTONS,CHAOS_DROP_PA_KEY,CHAOS_LATENCY_MS,CHAOS_HEALTHZ_500" --quiet
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH =~ /^chaos\//
       when: on_failure
 
@@ -62,5 +66,6 @@ chaos:record:
     - pnpm -s tsx scripts/chaos/record.ts
     - pnpm -s chaos-score
   rules:
+    - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH =~ /^chaos\//
       when: always
