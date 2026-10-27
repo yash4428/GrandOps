@@ -122,7 +122,7 @@ Source: GitLab docs, Flow Registry v1 + custom flow schema (docs v19.6). Verify 
 - Any component calling GitLab API tools **must** take `context:project_id` as `project_id` and include `Project ID: {{ project_id }}` in the `user:` block.
 - **Never write `{{ }}` in system prompt text** unless it's a real input variable (Jinja renders it; a stray one crashes the session).
 - The `as:` alias in `inputs` must exactly match the `{{ variable }}` in the prompt.
-- No response schemas → **when an agent's output drives a conditional router, the prompt must force the final answer to be exactly one keyword** (`APPROVE` / `CHANGES`, `PASS` / `FAIL`) and the router must include `default_route`.
+- No response schemas → **when an agent's output drives a conditional router, the prompt must force the final answer to be exactly one keyword** (`APPROVE` / `CHANGES`, `PASS` / `FAIL`) and the router must include a `"default_route"` key **inside `condition.routes`** (a `default_route` sibling of `condition` is rejected by the schema).
 - Add `flow.inputs` with `agent_platform_standard_context` when you need `primary_branch`, `workload_branch`, or `session_owner_id`.
 - `context:goal` format depends on the trigger: Mention = `Input: …\nContext: {Issue IID: N}`; Assign = URL **or** IID (handle both); MR/Work item = `Context:\n<Type>: <url>\nAction: <action>`; Pipeline = **full webhook JSON**. Prompts must parse defensively.
 - Supervisor mode: `subagents` + `max_delegations` (always set a cap) and every sub-agent needs `description`.

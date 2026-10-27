@@ -94,7 +94,7 @@ routers:
       routes:
         "TIER2": "second_reviewer"
         "DONE": "end"
-    default_route: "second_reviewer"
+        "default_route": "second_reviewer"
   - from: "second_reviewer"
     to: "end"
 flow:

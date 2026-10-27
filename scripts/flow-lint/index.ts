@@ -5,7 +5,7 @@ import { parse } from "yaml";
 
 interface Prompt { prompt_id: string; unit_primitives?: unknown; model?: unknown; prompt_template: { system: string; user: string; placeholder?: string }; params?: Record<string, unknown> }
 interface Component { name: string; type: string; prompt_id?: string; inputs?: { from: string; as: string }[]; toolset?: string[]; ui_log_events?: string[]; subagents?: { name: string; description?: string; prompt_id: string }[]; max_delegations?: number; response_schema_id?: unknown }
-interface Flow { version: string; environment: string; components: Component[]; prompts: Prompt[]; routers: { from: string; to?: string; condition?: unknown; default_route?: string }[]; flow: { entry_point: string } }
+interface Flow { version: string; environment: string; components: Component[]; prompts: Prompt[]; routers: { from: string; to?: string; condition?: { input?: string; routes?: Record<string, string> } }[]; flow: { entry_point: string } }
 
 const GITLAB_TOOLS = /^(get_|list_|create_|update_|gitlab_|submit_|dismiss_|confirm_|link_|build_review|ci_linter)/;
 
@@ -55,7 +55,8 @@ export function lintFlow(file: string, text: string): string[] {
   for (const r of d.routers) {
     if (!names.has(r.from)) errs.push(`router from unknown ${r.from}`);
     if (r.to && r.to !== "end" && r.to !== "abort" && !names.has(r.to)) errs.push(`router to unknown ${r.to}`);
-    if (r.condition && !r.default_route) errs.push(`conditional router from ${r.from} needs default_route`);
+    if ("default_route" in r) errs.push(`router from ${r.from}: default_route goes inside condition.routes, not on the router`);
+    if (r.condition && !r.condition.routes?.default_route) errs.push(`conditional router from ${r.from} needs condition.routes.default_route`);
   }
   if (!names.has(d.flow.entry_point)) errs.push("entry_point is not a component");
   return errs.map((e) => `${file}: ${e}`);
