@@ -14,12 +14,23 @@ gcloud config set project "$PROJECT_ID" >/dev/null
 echo "Enabling base APIs (about 1 minute)..."
 gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com iam.googleapis.com
 
+# Terraform-compatible CLI: terraform or tofu if present, else OpenTofu (MPL-2.0) into ~/bin.
+TFBIN="$(command -v tofu || command -v terraform || true)"
+if [ -z "$TFBIN" ] || ! "$TFBIN" version >/dev/null 2>&1; then
+  echo "Installing OpenTofu 1.10.0 into ~/bin..."
+  mkdir -p "$HOME/bin" && cd "$(mktemp -d)"
+  curl -fsSLo tofu.zip https://github.com/opentofu/opentofu/releases/download/v1.10.0/tofu_1.10.0_linux_amd64.zip
+  unzip -oq tofu.zip tofu -d "$HOME/bin" && cd - >/dev/null
+  TFBIN="$HOME/bin/tofu"
+fi
+"$TFBIN" version | head -1
+
 cd "$(dirname "$0")/terraform"
 printf 'terraform {\n  backend "local" {}\n}\n' > backend_override.tf
-terraform init -input=false -reconfigure >/dev/null
+"$TFBIN" init -input=false -reconfigure >/dev/null
 
 echo "Creating APIs and secrets..."
-terraform apply -input=false -auto-approve "${TF[@]}" -target=google_project_service.apis -target=google_secret_manager_secret.app
+"$TFBIN" apply -input=false -auto-approve "${TF[@]}" -target=google_project_service.apis -target=google_secret_manager_secret.app
 
 # Cloud Run will not start with a secret that has no version. "unset" means "feature off" in the app.
 for s in gitlab-read-token reports-issue-token error-tracking-dsn; do
@@ -29,7 +40,7 @@ for s in gitlab-read-token reports-issue-token error-tracking-dsn; do
 done
 
 echo "Creating Cloud Run, Firestore, Artifact Registry and Workload Identity (2-4 minutes)..."
-terraform apply -input=false -auto-approve "${TF[@]}"
+"$TFBIN" apply -input=false -auto-approve "${TF[@]}"
 
 cat <<EOF
 
@@ -37,8 +48,8 @@ Done. Add these in GitLab: Settings > CI/CD > Variables > Add variable
 (Type: Variable, untick "Protect variable" only if deploys must run outside main):
 
   GCP_PROJECT_ID    = $PROJECT_ID
-  GCP_WIF_PROVIDER  = $(terraform output -raw wif_provider)
-  GCP_DEPLOY_SA     = $(terraform output -raw deployer_sa)
-  STAGING_URL       = $(terraform output -raw staging_url)
-  PROD_URL          = $(terraform output -raw prod_url)
+  GCP_WIF_PROVIDER  = $("$TFBIN" output -raw wif_provider)
+  GCP_DEPLOY_SA     = $("$TFBIN" output -raw deployer_sa)
+  STAGING_URL       = $("$TFBIN" output -raw staging_url)
+  PROD_URL          = $("$TFBIN" output -raw prod_url)
 EOF
