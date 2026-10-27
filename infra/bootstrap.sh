@@ -16,14 +16,15 @@ gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleap
 
 # Terraform-compatible CLI: terraform or tofu if present, else OpenTofu (MPL-2.0) into ~/bin.
 TFBIN="$(command -v tofu || command -v terraform || true)"
-if [ -z "$TFBIN" ] || ! "$TFBIN" version >/dev/null 2>&1; then
+# Cloud Shell ships a "terraform" stub that only prints install hints, so check for a real version.
+if [ -z "$TFBIN" ] || ! "$TFBIN" version 2>/dev/null | grep -qE "^(Terraform|OpenTofu) v"; then
   echo "Installing OpenTofu 1.10.0 into ~/bin..."
   mkdir -p "$HOME/bin" && cd "$(mktemp -d)"
   curl -fsSLo tofu.zip https://github.com/opentofu/opentofu/releases/download/v1.10.0/tofu_1.10.0_linux_amd64.zip
   unzip -oq tofu.zip tofu -d "$HOME/bin" && cd - >/dev/null
   TFBIN="$HOME/bin/tofu"
 fi
-"$TFBIN" version | head -1
+"$TFBIN" version | head -1 | grep -E "^(Terraform|OpenTofu) v" || { echo "No working terraform/tofu found." >&2; exit 1; }
 
 cd "$(dirname "$0")/terraform"
 printf 'terraform {\n  backend "local" {}\n}\n' > backend_override.tf
