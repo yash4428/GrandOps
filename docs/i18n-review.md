@@ -8,3 +8,5 @@ All Hindi and Punjabi strings in `messages/hi.json` and `messages/pa.json` were 
 - `missionControl.stage.*` (shown in the demo video)
 
 Check especially: plural forms in `today.doseCount`, the tone of `today.confirmed`, and `missionControl.stage.govern` (Hindi "शासन", Punjabi "ਪ੍ਰਬੰਧ").
+
+Added for Mission Control: `missionControl.mergeRequest` (मर्ज अनुरोध / ਮਰਜ ਬੇਨਤੀ).

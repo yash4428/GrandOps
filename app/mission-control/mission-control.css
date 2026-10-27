@@ -50,3 +50,6 @@
 .mc-meter { width: 100%; height: 24px; }
 main.shell:has(.mc) { max-width: 1200px; }
 @media (min-width: 1150px) { .mc-ring { grid-template-columns: repeat(9, minmax(0, 1fr)); } }
+.mc-story { display: flex; flex-wrap: wrap; gap: 12px; }
+.mc-story .btn { font-size: 1.05rem; justify-content: flex-start; text-align: left; }
+.mc, .mc-list, .mc-story .btn { overflow-wrap: anywhere; }

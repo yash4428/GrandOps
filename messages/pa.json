@@ -167,7 +167,8 @@
     "lessonsCount": "{count, plural, one {# ਸਬਕ} other {# ਸਬਕ}}",
     "noLessons": "ਅਜੇ ਕੋਈ ਸਬਕ ਨਹੀਂ।",
     "diary": "ਰਾਤ ਦੀ ਡਾਇਰੀ",
-    "noDiary": "ਅਜੇ ਡਾਇਰੀ ਵਿੱਚ ਕੁਝ ਨਹੀਂ।"
+    "noDiary": "ਅਜੇ ਡਾਇਰੀ ਵਿੱਚ ਕੁਝ ਨਹੀਂ।",
+    "mergeRequest": "ਮਰਜ ਬੇਨਤੀ"
   },
   "errors": {
     "notFound": "ਇਹ ਪੰਨਾ ਮੌਜੂਦ ਨਹੀਂ ਹੈ।",

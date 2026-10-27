@@ -33,17 +33,17 @@ export default async function MissionControlPage() {
       <section aria-labelledby="mc-story" className="card">
         <h2 id="mc-story">{t("story")}</h2>
         {d.story ? (
-          <p>
-            <a href={d.story.url}>
+          <div className="mc-story">
+            {/* Issue titles come from GitLab as written, so they are marked as English. */}
+            <a href={d.story.url} className="btn btn-secondary" lang="en">
               #{d.story.iid} {d.story.title}
             </a>
             {d.story.mrUrl && (
-              <>
-                {" · "}
-                <a href={d.story.mrUrl}>MR</a>
-              </>
+              <a href={d.story.mrUrl} className="btn btn-secondary">
+                {t("mergeRequest")}
+              </a>
             )}
-          </p>
+          </div>
         ) : (
           <p>{t("noStory")}</p>
         )}

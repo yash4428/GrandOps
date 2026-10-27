@@ -5,13 +5,30 @@ import { expectNoViolations } from "./helpers";
 const LCP_BUDGET_MS = 3000;
 const JS_BUDGET_KB = 170;
 const PAGE_BUDGET_KB = 600;
+const THREE_G_RTT_MS = 400;
+
+/** Real round trip from this test runner to the server (median of 5). On a local server it is ~0. */
+async function measuredRttMs(request: import("@playwright/test").APIRequestContext): Promise<number> {
+  const times: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    const t0 = Date.now();
+    await request.get("/health");
+    times.push(Date.now() - t0);
+  }
+  return times.sort((a, b) => a - b)[2]!;
+}
 
 test.describe("persona:bittu", () => {
-  test("Today loads fast on a slow phone and network", async ({ page, browserName }) => {
+  test("Today loads fast on a slow phone and network", async ({ page, browserName, request }) => {
     test.skip(browserName !== "chromium", "CDP throttling needs Chromium");
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Network.enable");
-    await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 400, downloadThroughput: (400 * 1024) / 8, uploadThroughput: (400 * 1024) / 8 });
+    // Bittu's phone sees 400ms per round trip in total. A runner far from the server already pays part of
+    // that (e.g. US runner to Mumbai), so only the remainder is emulated. The LCP budget never changes.
+    const rtt = await measuredRttMs(request);
+    const latency = Math.max(0, THREE_G_RTT_MS - rtt);
+    test.info().annotations.push({ type: "network", description: JSON.stringify({ measuredRttMs: rtt, emulatedLatencyMs: latency }) });
+    await cdp.send("Network.emulateNetworkConditions", { offline: false, latency, downloadThroughput: (400 * 1024) / 8, uploadThroughput: (400 * 1024) / 8 });
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
 
     await page.goto("/", { waitUntil: "load" });

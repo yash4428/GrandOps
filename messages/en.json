@@ -167,7 +167,8 @@
     "lessonsCount": "{count, plural, one {# lesson} other {# lessons}}",
     "noLessons": "No lessons yet.",
     "diary": "Overnight diary",
-    "noDiary": "No diary entry yet."
+    "noDiary": "No diary entry yet.",
+    "mergeRequest": "Merge request"
   },
   "errors": {
     "notFound": "This page does not exist.",

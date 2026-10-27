@@ -167,7 +167,8 @@
     "lessonsCount": "{count, plural, one {# सबक} other {# सबक}}",
     "noLessons": "अभी कोई सबक नहीं।",
     "diary": "रात की डायरी",
-    "noDiary": "अभी डायरी में कुछ नहीं।"
+    "noDiary": "अभी डायरी में कुछ नहीं।",
+    "mergeRequest": "मर्ज अनुरोध"
   },
   "errors": {
     "notFound": "यह पेज मौजूद नहीं है।",
