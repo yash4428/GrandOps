@@ -11,6 +11,10 @@ Follows PRD §12. Record from real runs only. Fill the evidence table as runs ha
 | Green `main` pipeline: 25 jobs incl. 5 personas, security scans, SBOM, SCI | [pipelines/2993034555](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/pipelines/2993034555) |
 | Kamla fails on a 32px button, Builder fixes it | _TBD_ |
 | Sentinel finds and fixes a vulnerable dependency | _TBD_ |
+| Builder opened MR from the triaged issue | [merge_requests/1](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/merge_requests/1) |
+| Elder-care reviewer + tier-2 second reviewer APPROVE; Sentinel review; Herald EN/HI/PA notes | [merge_requests/1](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/merge_requests/1) |
+| Green Steward carbon MR blocked by reviewer (weakened container scanning) | [merge_requests/2](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/merge_requests/2) |
+| Deploy to Cloud Run, live personas pass, canary breach → automatic rollback | [pipelines/2993785004](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/pipelines/2993785004) |
 | Canary breach → rollback → incident | _TBD_ |
 | Chaos round: attack → detect → heal | _TBD_ |
 | Scribe lesson in AGENTS.md, later MR cites it | _TBD_ |

@@ -42,9 +42,11 @@ Details: [`docs/architecture.md`](docs/architecture.md), [`docs/agents.md`](docs
 
 | | URL |
 |---|---|
-| App (prod) | _TBD_ |
-| Mission Control | _TBD_/mission-control |
-| Staging | _TBD_ |
+| App (staging, Cloud Run asia-south1) | https://app-staging-anhze6ketq-el.a.run.app |
+| Mission Control | https://app-staging-anhze6ketq-el.a.run.app/mission-control |
+| Production (canary-gated) | https://app-prod-anhze6ketq-el.a.run.app |
+
+Production only receives a build after the canary passes its SLO. The first canary breached p95 and was rolled back automatically (pipeline 2993785004).
 
 ## Run it locally
 
