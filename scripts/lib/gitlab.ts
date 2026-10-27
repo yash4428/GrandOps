@@ -45,6 +45,11 @@ export async function readLedger<T>(file: string, fallback: T): Promise<T> {
 
 /** Writes files to the data branch in one commit (creates the branch from main if needed). */
 export async function writeLedger(files: Record<string, string>, message: string): Promise<void> {
+  // CI_JOB_TOKEN cannot push to the repository; without a bot token the ledger stays in the job artifact only.
+  if (!botToken()) {
+    console.warn(`writeLedger: AUTOPILOT_BOT_TOKEN not set, skipping ${DATA_BRANCH} commit (${Object.keys(files).join(", ")})`);
+    return;
+  }
   try {
     await api("GET", `/repository/branches/${DATA_BRANCH}`);
   } catch {

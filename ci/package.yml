@@ -36,7 +36,7 @@ package:image-gcp:
 
 package:sbom:
   stage: package
-  image: { name: "anchore/syft:v1.33.0", entrypoint: [""] }
+  image: { name: "anchore/syft:v1.33.0-debug", entrypoint: [""] }
   tags: [saas-linux-small-amd64]
   needs: [package:image]
   variables:

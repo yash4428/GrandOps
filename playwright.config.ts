@@ -10,6 +10,8 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   timeout: 60_000,
+  // Commit author emails would land in the JSON report and trip the PII scan.
+  captureGitInfo: { commit: false, diff: false },
   reporter: [
     ["list"],
     ["junit", { outputFile: process.env.JUNIT_FILE ?? "reports/junit-playwright.xml" }],
