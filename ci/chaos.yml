@@ -18,7 +18,7 @@ chaos:attack-staging:
   environment: { name: staging, url: $STAGING_URL }
   script:
     - ENV_VARS=$(grep -E '^CHAOS_[A-Z0-9_]+=' chaos/active.env | paste -sd, -)
-    - echo "Attack: $ENV_VARS"
+    - 'echo "Attack: $ENV_VARS"'
     - gcloud run services update app-staging --region "$GCP_REGION" --update-env-vars "$ENV_VARS" --quiet
     - date -u +%Y-%m-%dT%H:%M:%SZ > attack_at.txt
   artifacts:
