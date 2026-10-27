@@ -76,6 +76,7 @@ test:unit:
     # Impact-selected on MRs for tier 0/1 (carbon saving); full suite on main and for tier 2.
     - |
       if [ -n "$CI_MERGE_REQUEST_IID" ] && [ "$RISK_TIER" != "2" ]; then
+        command -v git >/dev/null || { apt-get -qq update && apt-get -qq install -y --no-install-recommends git ca-certificates >/dev/null; }
         git fetch --depth=50 origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
         pnpm vitest run --changed "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --passWithNoTests
       else
