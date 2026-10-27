@@ -1,5 +1,6 @@
 import "server-only";
 import type { UserReport } from "../data/types";
+import { secretEnv } from "@/lib/env/secret";
 
 /** Builds the issue body. Contains no names, phone numbers or medicine lists. Pure. */
 export function issueBody(r: UserReport): string {
@@ -25,7 +26,7 @@ export function issueBody(r: UserReport): string {
 
 /** Files a GitLab issue with a project bot token. Returns the issue IID or null. */
 export async function fileIssue(r: UserReport): Promise<number | null> {
-  const token = process.env.REPORTS_ISSUE_TOKEN;
+  const token = secretEnv("REPORTS_ISSUE_TOKEN");
   const project = process.env.GITLAB_PROJECT_ID;
   const api = process.env.GITLAB_API_URL ?? "https://gitlab.com/api/v4";
   if (!token || !project) return null;

@@ -1,11 +1,12 @@
 import "server-only";
+import { secretEnv } from "@/lib/env/secret";
 
 /**
  * Minimal Sentry-protocol client for GitLab Error Tracking (integrated mode).
  * Only error type, message and route are sent. Never user data.
  */
 export async function reportError(err: unknown, route: string): Promise<void> {
-  const dsn = process.env.ERROR_TRACKING_DSN;
+  const dsn = secretEnv("ERROR_TRACKING_DSN");
   log("error", "unhandled_error", { route, error: err instanceof Error ? err.name : "unknown" });
   if (!dsn) return;
   try {

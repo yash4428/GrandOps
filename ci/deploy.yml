@@ -7,7 +7,7 @@ deploy:staging:
   environment: { name: staging, url: $STAGING_URL }
   script:
     - gcloud run deploy app-staging --image "$AR_IMAGE" --region "$GCP_REGION" --quiet
-        --update-env-vars "APP_ENV=staging,APP_VERSION=$CI_COMMIT_SHORT_SHA"
+        --update-env-vars "APP_ENV=staging,APP_VERSION=$CI_COMMIT_SHORT_SHA,GITLAB_PROJECT_ID=$CI_PROJECT_ID"
         --remove-env-vars "CHAOS_TINY_BUTTONS,CHAOS_DROP_PA_KEY,CHAOS_LATENCY_MS,CHAOS_HEALTHZ_500"
   rules:
     - !reference [.needs-gcp, rules]
@@ -60,7 +60,7 @@ deploy:canary-prod:
   script:
     - PREV=$(gcloud run services describe app-prod --region "$GCP_REGION" --format='value(status.traffic[0].revisionName)')
     - gcloud run deploy app-prod --image "$AR_IMAGE" --region "$GCP_REGION" --no-traffic --tag canary --quiet
-        --update-env-vars "APP_ENV=production,APP_VERSION=$CI_COMMIT_SHORT_SHA"
+        --update-env-vars "APP_ENV=production,APP_VERSION=$CI_COMMIT_SHORT_SHA,GITLAB_PROJECT_ID=$CI_PROJECT_ID"
     - CANARY_REV=$(gcloud run services describe app-prod --region "$GCP_REGION" --format='value(status.latestCreatedRevisionName)')
     - gcloud run services update-traffic app-prod --region "$GCP_REGION" --to-tags "canary=${CANARY_PERCENT:-10}" --quiet
     - CANARY_URL=$(gcloud run services describe app-prod --region "$GCP_REGION" --format=json | python3 -c "import json,sys;print([t['url'] for t in json.load(sys.stdin)['status']['traffic'] if t.get('tag')=='canary'][0])")

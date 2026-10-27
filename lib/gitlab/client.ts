@@ -1,4 +1,5 @@
 import "server-only";
+import { secretEnv } from "@/lib/env/secret";
 
 const cache = new Map<string, { at: number; value: unknown }>();
 
@@ -15,7 +16,7 @@ export async function gl<T>(path: string, ttlMs = 5000): Promise<T | null> {
   const hit = cache.get(url);
   if (hit && Date.now() - hit.at < ttlMs) return hit.value as T;
   try {
-    const token = process.env.GITLAB_READ_TOKEN;
+    const token = secretEnv("GITLAB_READ_TOKEN");
     const res = await fetch(url, { headers: token ? { "PRIVATE-TOKEN": token } : {}, signal: AbortSignal.timeout(4000), cache: "no-store" });
     if (!res.ok) return (hit?.value as T) ?? null;
     const ct = res.headers.get("content-type") ?? "";
