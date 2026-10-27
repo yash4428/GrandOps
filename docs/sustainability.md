@@ -40,16 +40,16 @@ Duo flow sessions use LLM inference whose energy we cannot measure. We report it
 | Scale-to-zero staging, `min-instances=0` prod outside judging | `infra/terraform/run.tf` |
 | `model_size_preference: small` for non-coding agents | `.gitlab/duo/flows` |
 
-## Before / after
+## Before / after (measured)
 
-Measured by running the same MRs with `CI_PROFILE=baseline` (a manual pipeline: naive, everything every time) and the default smart profile. The SCI ledger (`sci.json` on the `autopilot-data` branch) keeps both.
+Job-minutes come from the GitLab API for this project's real pipelines on 27 Oct 2026. Carbon is calculated with the coefficients above: a small runner (2 vCPU, 8 GB, 50% CPU, PUE 1.1, us-east1 grid 560 gCO₂e/kWh) emits about **0.083 g operational + 0.018 g embodied ≈ 0.10 gCO₂e per job-minute**. The `sci:report` job independently computed 1.91 g for a ~18 job-minute main pipeline.
 
-| Profile | MRs measured | g CO₂e per MR | g CO₂e per deployment |
+| Pipeline | Jobs run | Job-minutes | ≈ gCO₂e |
 |---|---|---|---|
-| Baseline | _TBD_ | _TBD_ | _TBD_ |
-| Smart | _TBD_ | _TBD_ | _TBD_ |
-| Reduction | | _TBD_ | _TBD_ |
+| Main: test + secure + package | 25 | 17.2–18.6 | 1.7–1.9 |
+| Main + deploy to Cloud Run + canary | 29–33 | 27–35 | 2.7–3.5 |
+| MR changing app code (!1, !3) | 22 | 16.2–17.6 | 1.6–1.8 |
+| MR changing only CI (!2), with change-aware rules | 15 | 10.1 | 1.0 |
+| **Reduction from change-aware rules (CI-only MR vs app MR)** | | **≈ 43%** | **≈ 0.7 g per MR** |
 
-_No numbers until real pipelines have run. Do not fill this table by estimate._
-
-> Note: a true "baseline" profile needs the rules to ignore `changes:`; set up the baseline runs as described in `docs/demo-script.md` before recording.
+**Limits.** This compares real MRs that changed different files, not a controlled A/B test of identical MRs with a naive "everything every time" profile; that baseline run was not completed before the deadline. The coefficients are CCF defaults flagged `verify`, and the runner region is an assumption. LLM inference for Duo sessions is not included.
