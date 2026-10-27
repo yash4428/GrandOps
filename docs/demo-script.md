@@ -7,6 +7,8 @@ Follows PRD §12. Record from real runs only. Fill the evidence table as runs ha
 | Moment | Link |
 |---|---|
 | First full hands-off run (issue → prod) | _TBD issue / MR / pipeline_ |
+| Triage flow auto-run on issue create (labels, tier 2, acceptance criteria, persona plan) | [work_items/2](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/work_items/2) |
+| Green `main` pipeline: 25 jobs incl. 5 personas, security scans, SBOM, SCI | [pipelines/2993034555](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43704625/showcase/-/pipelines/2993034555) |
 | Kamla fails on a 32px button, Builder fixes it | _TBD_ |
 | Sentinel finds and fixes a vulnerable dependency | _TBD_ |
 | Canary breach → rollback → incident | _TBD_ |
