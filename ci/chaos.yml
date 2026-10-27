@@ -34,7 +34,7 @@ chaos:detect:
   needs: [chaos:attack-staging]
   variables: { CI: "true", BASE_URL: $STAGING_URL, JUNIT_FILE: reports/junit-chaos.xml, PERSONA_JSON: reports/playwright-chaos.json }
   script:
-    - node -e "fetch(process.env.STAGING_URL+'/healthz').then(r=>{console.log('healthz',r.status);if(r.status!==200)process.exit(1)})"
+    - node -e "fetch(process.env.STAGING_URL+'/health').then(r=>{console.log('health',r.status);if(r.status!==200)process.exit(1)})"
     - pnpm exec playwright test --project=kamla --project=rano --project=bittu --project=mohan
   artifacts:
     when: always

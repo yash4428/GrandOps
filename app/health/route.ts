@@ -1,5 +1,6 @@
 import { chaosHealthz500 } from "@/lib/flags";
 
+// Not /healthz: Cloud Run reserves paths ending in "z" and answers them itself.
 export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<Response> {

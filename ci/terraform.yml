@@ -56,9 +56,9 @@ terraform:plan:
     paths: [infra/terraform/plan.cache]
     reports: { terraform: infra/terraform/plan.json }
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $GCP_WIF_PROVIDER
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $GCP_WIF_PROVIDER && $TF_STATE_IN_GITLAB == "true"
       changes: ["infra/**/*"]
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule" && $GCP_WIF_PROVIDER
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule" && $GCP_WIF_PROVIDER && $TF_STATE_IN_GITLAB == "true"
       changes: ["infra/**/*"]
 
 terraform:apply:
@@ -70,5 +70,5 @@ terraform:apply:
     - tofu apply -input=false plan.cache
   environment: { name: infrastructure }
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule" && $GCP_WIF_PROVIDER
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule" && $GCP_WIF_PROVIDER && $TF_STATE_IN_GITLAB == "true"
       changes: ["infra/**/*"]

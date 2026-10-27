@@ -71,7 +71,7 @@ resource "google_cloud_run_v2_service" "app" {
       }
       startup_probe {
         http_get {
-          path = "/healthz"
+          path = "/health"
         }
       }
     }

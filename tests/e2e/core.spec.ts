@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("core flows @e2e", () => {
-  test("healthz is ok", async ({ request }) => {
-    const res = await request.get("/healthz");
+  test("health is ok", async ({ request }) => {
+    const res = await request.get("/health");
     expect(res.status()).toBe(200);
     expect((await res.json()).ok).toBe(true);
   });

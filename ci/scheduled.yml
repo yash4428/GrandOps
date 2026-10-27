@@ -5,7 +5,7 @@ monitor:synthetic:
   stage: verify-live
   variables: { CI: "true", BASE_URL: $PROD_URL, JUNIT_FILE: reports/junit-monitor.xml, PERSONA_JSON: reports/playwright-monitor.json }
   script:
-    - node -e "fetch(process.env.PROD_URL+'/healthz').then(r=>{console.log('healthz',r.status);if(r.status!==200)process.exit(1)})"
+    - node -e "fetch(process.env.PROD_URL+'/health').then(r=>{console.log('health',r.status);if(r.status!==200)process.exit(1)})"
     - pnpm exec playwright test --project=bittu --project=harbans
   artifacts:
     when: always

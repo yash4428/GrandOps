@@ -18,7 +18,7 @@ verify:staging-smoke:
   stage: verify-live
   needs: [deploy:staging]
   script:
-    - node -e "fetch(process.env.STAGING_URL+'/healthz').then(async r=>{const b=await r.json();console.log(r.status,b);if(!b.ok||b.version!==process.env.CI_COMMIT_SHORT_SHA)process.exit(1)})"
+    - node -e "fetch(process.env.STAGING_URL+'/health').then(async r=>{const b=await r.json();console.log(r.status,b);if(!b.ok||b.version!==process.env.CI_COMMIT_SHORT_SHA)process.exit(1)})"
   rules:
     - !reference [.needs-gcp, rules]
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "schedule"

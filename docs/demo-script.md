@@ -21,7 +21,7 @@ Follows PRD §12. Record from real runs only. Fill the evidence table as runs ha
 
 ## Recipes
 
-**Break prod on purpose (rollback demo):** merge an MR that makes `/healthz` slow or erroring only when `APP_ENV=production` would be dishonest; instead use a real regression, e.g. an MR adding a 2 s server delay to `/` (p95 SLO is 1.5 s). The canary watch fails, rollback runs, incident opens.
+**Break prod on purpose (rollback demo):** merge an MR that makes `/health` slow or erroring only when `APP_ENV=production` would be dishonest; instead use a real regression, e.g. an MR adding a 2 s server delay to `/` (p95 SLO is 1.5 s). The canary watch fails, rollback runs, incident opens.
 
 **Chaos round:** comment `@<chaos-flow> unleash tiny_buttons` on any issue. Branch `chaos/round-N-tiny_buttons` deploys the attack to staging; `chaos:detect` fails (Kamla); `chaos:heal` restores staging; `chaos:record` closes the round; scoreboard updates.
 

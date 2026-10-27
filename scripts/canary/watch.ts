@@ -6,7 +6,7 @@ import { evaluate, type Probe } from "./slo";
 
 const url = process.env.CANARY_URL;
 const minutes = Number(process.env.CANARY_MINUTES ?? 5);
-const paths = ["/healthz", "/", "/caregiver"];
+const paths = ["/health", "/", "/caregiver"];
 
 async function probe(u: string): Promise<Probe> {
   const t0 = performance.now();

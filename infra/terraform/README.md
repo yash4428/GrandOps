@@ -24,3 +24,5 @@ Until `GCP_WIF_PROVIDER` is set, every job that needs Google Cloud (image push, 
 After bootstrap, `terraform:plan` runs on MRs and `terraform:apply` on `main` (changes under `infra/`).
 
 The HCL is plain Terraform. CI runs it with OpenTofu (MPL-2.0, OSI-approved) because Terraform ≥ 1.6 is BUSL. `terraform` works identically locally.
+
+**Hackathon bootstrap:** `bash infra/bootstrap.sh <project-id>` in Google Cloud Shell creates the same resources with local state there. CI `terraform:plan`/`terraform:apply` stay off until state is migrated to GitLab and `TF_STATE_IN_GITLAB=true` is set; `terraform:validate` always runs. The app health check is `/health`, not `/healthz`: Cloud Run reserves paths ending in "z".
