@@ -12,13 +12,22 @@ export async function DoseCard({ dose, medicine, justDone }: { dose: DoseWithSta
   const headingId = `dose-${medicine.id}-${dose.time.replace(":", "")}`;
   return (
     <li className="dose-card" data-status={dose.status} data-testid="dose-card" aria-labelledby={headingId}>
-      <div className="dose-time">{t("today.at", { time: dose.time })}</div>
-      <h3 className="dose-name" id={headingId}>
-        {name}
-      </h3>
-      <p className="dose-meta">
-        {t("today.doseCount", { count: medicine.doseCount })} · {t(`colours.${medicine.colour}`)} · {t(`instructions.${medicine.instruction}`)}
-      </p>
+      <div className="dose-head">
+        <div className="dose-time">{t("today.at", { time: dose.time })}</div>
+        {dose.status === "due" && <span className="status-pill status-due">{t("today.dueNow")}</span>}
+      </div>
+      <div className="dose-body">
+        {/* The tablet drawn in its real colour, so it can be matched to the pill in hand. */}
+        <span className="pill" data-colour={medicine.colour} aria-hidden="true" />
+        <div>
+          <h3 className="dose-name" id={headingId}>
+            {name}
+          </h3>
+          <p className="dose-meta">
+            {t("today.doseCount", { count: medicine.doseCount })} · {t(`colours.${medicine.colour}`)} · {t(`instructions.${medicine.instruction}`)}
+          </p>
+        </div>
+      </div>
       {dose.status === "taken" ? (
         <p className="status-pill status-taken" id={justDone ? "done" : undefined} tabIndex={justDone ? -1 : undefined}>
           <CheckIcon />

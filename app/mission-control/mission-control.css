@@ -1,30 +1,52 @@
 .mc { max-width: 1200px; }
 .mc-updated { color: var(--muted); }
+
+/* The nine stages are a sequence, so they sit on one rail, joined left to right. */
 .mc-ring {
-  list-style: none; padding: 0; margin: 0 0 24px;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
+  list-style: none; padding: 0; margin: 0 0 28px; counter-reset: stage;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px;
 }
 .mc-stage {
+  counter-increment: stage; position: relative;
   display: grid; gap: 4px; justify-items: center; text-align: center;
-  padding: 16px 8px; border-radius: var(--radius); border: 3px solid var(--border); background: var(--bg);
+  padding: 18px 8px 14px; border-radius: var(--radius); border: 2px solid var(--line); background: var(--card);
 }
-.mc-stage-icon { font-size: 2rem; line-height: 1; }
-.mc-stage-name { font-weight: 800; font-size: 1.15rem; }
-.mc-stage-state { font-weight: 600; }
-.mc-stage[data-state="success"] { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
-.mc-stage[data-state="failed"] { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
-.mc-stage[data-state="running"] { background: var(--warn-bg); border-color: var(--text); }
+.mc-stage::before {
+  content: counter(stage); position: absolute; top: 8px; left: 10px;
+  font-size: 0.85rem; font-weight: 700; color: var(--muted);
+}
+.mc-stage:not(:last-child)::after {
+  content: ""; position: absolute; top: 50%; right: -16px; width: 18px; height: 3px; background: var(--line);
+}
+.mc-stage-icon {
+  display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%;
+  font-size: 1.6rem; line-height: 1; background: var(--paper); color: var(--muted);
+}
+.mc-stage-name { font-weight: 700; font-size: 1.1rem; }
+.mc-stage-state { font-weight: 700; color: var(--muted); }
+.mc-stage[data-state="success"] { border-color: var(--ok); }
+.mc-stage[data-state="success"] .mc-stage-icon { background: var(--ok); color: #ffffff; }
+.mc-stage[data-state="success"] .mc-stage-state { color: var(--ok); }
+.mc-stage[data-state="failed"] { border-color: var(--danger); background: var(--danger-bg); }
+.mc-stage[data-state="failed"] .mc-stage-icon { background: var(--danger); color: #ffffff; }
+.mc-stage[data-state="failed"] .mc-stage-state { color: var(--danger); }
+.mc-stage[data-state="running"] { border-color: var(--marigold); border-width: 3px; background: var(--marigold-soft); }
+.mc-stage[data-state="running"] .mc-stage-icon { background: var(--marigold); color: var(--ink); }
+.mc-stage[data-state="running"] .mc-stage-state { color: var(--ink); }
 @media (prefers-reduced-motion: no-preference) {
-  .mc-stage[data-state="running"] .mc-stage-icon { animation: spin 1.6s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .mc-stage[data-state="running"] .mc-stage-icon { animation: mc-pulse 1.6s ease-in-out infinite; }
+  @keyframes mc-pulse { 50% { box-shadow: 0 0 0 8px rgba(244, 180, 0, 0.35); } }
 }
-.mc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+
+.mc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin-bottom: 18px; }
 .mc-grid .card { margin: 0; }
-.mc-list { padding-left: 0; list-style: none; display: grid; gap: 8px; margin: 0; }
+.mc-grid .card h2, .mc .card > h2 { margin-top: 0; }
+.mc-list { padding-left: 0; list-style: none; display: grid; gap: 10px; margin: 0; }
 .mc-list li[data-state="fail"] { color: var(--danger); }
 .mc-list li[data-state="pass"] { color: var(--ok); }
 .mc-dl { display: grid; grid-template-columns: auto auto; gap: 6px 16px; margin: 0; }
 .mc-dl dt { font-weight: 700; }
-.mc-dl dd { margin: 0; }
+.mc-dl dd { margin: 0; font-variant-numeric: tabular-nums; }
 .mc-meter { width: 100%; height: 24px; }
 main.shell:has(.mc) { max-width: 1200px; }
+@media (min-width: 1150px) { .mc-ring { grid-template-columns: repeat(9, minmax(0, 1fr)); } }

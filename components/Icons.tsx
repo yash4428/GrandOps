@@ -43,3 +43,13 @@ export const MicIcon = (p: IconProps) => (
     <path d="M19 10a7 7 0 0 1-14 0M12 19v3" />
   </Svg>
 );
+
+// Our own mark: a three-compartment pill box (morning, afternoon, night).
+export const LogoMark = () => (
+  <svg width={36} height={36} viewBox="0 0 36 36" aria-hidden="true" focusable="false" className="logo-mark">
+    <rect x="2" y="8" width="32" height="22" rx="6" fill="#ffffff" />
+    <rect x="5" y="11" width="8" height="16" rx="3" fill="#f4b400" />
+    <rect x="14" y="11" width="8" height="16" rx="3" fill="#dbe4ff" />
+    <rect x="23" y="11" width="8" height="16" rx="3" fill="#dbe4ff" />
+  </svg>
+);

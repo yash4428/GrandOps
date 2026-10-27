@@ -1,21 +1,31 @@
-/* Elder-first defaults: large type, AAA contrast on key text, 48px+ targets. */
+/* Elder-first design: a pill box ("dawai ka dabba") in indigo and marigold.
+   Large type, AAA contrast on key text (persona Harbans), 48px+ targets (persona Kamla). */
 :root {
-  --bg: #ffffff;
-  --surface: #f4f6f4;
-  --text: #111111;
-  --muted: #333333;
-  --primary: #0b5d1e;
-  --primary-text: #ffffff;
-  --danger: #8a0000;
-  --danger-bg: #fff1f1;
-  --ok: #0b5d1e;
-  --ok-bg: #eaf6ec;
-  --warn-bg: #fff8e1;
+  --paper: #eef1f6;
+  --card: #ffffff;
+  --ink: #101828;
+  --muted: #3d4656;
+  --line: #b9c3d3;
+  --indigo: #1f2a6b;
+  --indigo-soft: #dbe4ff;
+  --marigold: #f4b400;
+  --marigold-soft: #fff4d1;
+  --ok: #0a4f19;
+  --ok-bg: #e7f3ea;
+  --danger: #8a1c1c;
+  --danger-bg: #fdecec;
   --focus: #1a3fbf;
-  --border: #4a4a4a;
-  --radius: 14px;
-  --target: 56px;
-  --gap: 16px;
+  --radius: 18px;
+  --target: 60px;
+  --gap: 18px;
+  /* Kept for pages that still use the old names. */
+  --bg: var(--card);
+  --text: var(--ink);
+  --border: var(--line);
+  --surface: var(--paper);
+  --primary: var(--ok);
+  --primary-text: #ffffff;
+  --warn-bg: var(--marigold-soft);
   color-scheme: light;
 }
 
@@ -25,8 +35,8 @@ html { font-size: 112.5%; -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-latin), var(--font-deva), var(--font-guru), system-ui, sans-serif;
   font-size: 1rem; /* 18px */
   line-height: 1.55;
@@ -35,13 +45,14 @@ body {
 :lang(hi) body, body:lang(hi) { font-family: var(--font-deva), var(--font-latin), system-ui, sans-serif; }
 :lang(pa) body, body:lang(pa) { font-family: var(--font-guru), var(--font-latin), system-ui, sans-serif; }
 
-a { color: var(--focus); }
+a { color: var(--focus); text-underline-offset: 3px; }
 
-:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
+.site-header :focus-visible { outline-color: var(--marigold); }
 
 .skip-link {
   position: absolute; left: 8px; top: -100px; z-index: 10;
-  background: var(--text); color: var(--bg); padding: 14px 18px; border-radius: 8px;
+  background: var(--ink); color: #ffffff; padding: 14px 18px; border-radius: 10px;
 }
 .skip-link:focus { top: 8px; }
 
@@ -50,99 +61,132 @@ a { color: var(--focus); }
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-.shell { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+.shell { max-width: 760px; margin: 0 auto; padding: 0 16px 56px; }
 
-/* Header */
-.site-header { border-bottom: 2px solid var(--border); background: var(--bg); }
-.header-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 0; }
-.brand { font-size: 1.4rem; font-weight: 700; margin: 0; }
-.lang-form { display: flex; gap: 8px; flex-wrap: wrap; }
-.lang-form fieldset { display: contents; border: 0; }
+/* Header: the indigo lid of the pill box. */
+.site-header { background: var(--indigo); color: #ffffff; }
+.site-header .shell { padding-bottom: 0; }
+.header-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 16px 0 12px; }
+.brand { display: flex; align-items: center; gap: 12px; font-size: 1.45rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.logo-mark { flex: none; }
+
+.lang-form { display: flex; }
+.lang-form fieldset { display: flex; gap: 8px; border: 2px solid #ffffff; border-radius: 14px; padding: 3px; margin: 0; }
 .lang-btn {
-  min-height: 48px; min-width: 64px; padding: 8px 14px;
-  font: inherit; font-size: 1rem; border: 2px solid var(--border); border-radius: 10px;
-  background: var(--bg); color: var(--text); cursor: pointer;
+  min-height: 48px; min-width: 64px; padding: 6px 14px;
+  font: inherit; font-size: 1rem; font-weight: 700; border: 0; border-radius: 10px;
+  background: transparent; color: #ffffff; cursor: pointer;
 }
-.lang-btn[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.lang-btn[aria-pressed="true"] { background: #ffffff; color: var(--indigo); }
 
-.nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 0 12px; margin: 0; list-style: none; }
-.nav a {
-  display: inline-flex; align-items: center; min-height: 48px; padding: 8px 16px;
-  border-radius: 10px; text-decoration: none; color: var(--text); border: 2px solid transparent; font-weight: 600;
-}
-.nav a[aria-current="page"] { border-color: var(--text); background: var(--surface); }
-
-/* Something's wrong: in the header of every page. Not floating, so it never covers a dose button. */
+/* Something's wrong: always visible, never floating, so it can't cover a dose button. */
 .report-btn {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  min-height: 64px; padding: 12px 22px; margin: 0 0 12px; border-radius: 14px;
-  background: var(--danger); color: #ffffff; font-weight: 700; font-size: 1.15rem; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  min-height: 60px; padding: 12px 22px; margin: 6px 0 14px; border-radius: 16px;
+  background: #ffffff; color: var(--danger); border: 3px solid #ffffff;
+  font-weight: 700; font-size: 1.15rem; text-decoration: none;
 }
+.report-btn:hover { background: var(--danger-bg); }
 
-h1 { font-size: 1.9rem; line-height: 1.25; margin: 24px 0 8px; }
-h2 { font-size: 1.4rem; margin: 28px 0 12px; }
+.nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 0; list-style: none; }
+.nav a {
+  display: flex; align-items: center; justify-content: center; text-align: center; height: 100%; min-height: 56px; padding: 8px 6px;
+  border-radius: 14px 14px 0 0; text-decoration: none; color: #ffffff; font-weight: 700; line-height: 1.2;
+}
+.nav a:hover { background: rgba(255, 255, 255, 0.12); }
+.nav a[aria-current="page"] { background: var(--paper); color: var(--indigo); }
+
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 32px 0 6px; letter-spacing: -0.015em; }
+h2 { font-size: 1.35rem; margin: 32px 0 12px; }
 p { margin: 0 0 12px; }
 .lead { font-size: 1.15rem; color: var(--muted); }
 
-/* Dose cards */
+/* Dose cards: one compartment per dose. The lid shows the time; the body shows the tablet. */
 .dose-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--gap); }
 .dose-card {
-  border: 3px solid var(--border); border-radius: var(--radius); padding: 18px;
-  display: grid; gap: 10px; background: var(--bg);
+  background: var(--card); border: 2px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; display: grid;
 }
-.dose-card[data-status="missed"] { border-color: var(--danger); background: var(--danger-bg); }
-.dose-card[data-status="taken"] { border-color: var(--ok); background: var(--ok-bg); }
-.dose-card[data-status="due"] { border-color: var(--text); background: var(--warn-bg); }
-.dose-time { font-size: 1.5rem; font-weight: 800; }
-.dose-name { font-size: 1.3rem; font-weight: 700; margin: 0; }
+.dose-card > * { margin-left: 20px; margin-right: 20px; }
+.dose-card > :last-child { margin-bottom: 20px; }
+.dose-head {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 0; padding: 14px 20px; background: var(--paper); border-bottom: 2px solid var(--line);
+}
+.dose-time { font-size: 1.7rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.dose-body { display: flex; align-items: center; gap: 18px; margin-top: 18px; margin-bottom: 14px; }
+.dose-name { font-size: 1.35rem; font-weight: 700; margin: 0 0 2px; }
 .dose-meta { color: var(--muted); margin: 0; }
-.status-pill { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; font-size: 1.05rem; }
+
+.pill { flex: none; width: 68px; height: 40px; border-radius: 50%; border: 3px solid var(--ink); position: relative; background: #ffffff; transform: rotate(-18deg); }
+.pill::after { content: ""; position: absolute; left: 12px; top: 6px; width: 18px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.75); }
+.pill[data-colour="yellow"] { background: #f7d046; }
+.pill[data-colour="pink"] { background: #f4a6c0; }
+.pill[data-colour="blue"] { background: #8fb4ff; }
+.pill[data-colour="white"] { background: #ffffff; }
+
+.dose-card[data-status="due"] { border-color: var(--marigold); border-width: 3px; }
+.dose-card[data-status="due"] .dose-head { background: var(--marigold-soft); border-color: var(--marigold); }
+.dose-card[data-status="missed"] { border-color: var(--danger); border-width: 3px; }
+.dose-card[data-status="missed"] .dose-head { background: var(--danger-bg); border-color: var(--danger); }
+.dose-card[data-status="taken"] { border-color: var(--ok); }
+.dose-card[data-status="taken"] .dose-head { background: var(--ok-bg); border-color: var(--ok); }
+
+.status-pill { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; font-size: 1.05rem; color: var(--ink); margin-top: 0; margin-bottom: 14px; }
 .status-pill svg { flex: none; }
+.dose-head .status-pill { margin: 0; }
+.status-due { background: var(--marigold); color: var(--ink); padding: 6px 14px; border-radius: 999px; }
 .status-missed { color: var(--danger); }
 .status-taken { color: var(--ok); }
 
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  min-height: var(--target); min-width: 48px; padding: 12px 24px;
-  font: inherit; font-size: 1.2rem; font-weight: 700; border-radius: 12px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+  min-height: var(--target); min-width: 48px; padding: 12px 26px;
+  font: inherit; font-size: 1.25rem; font-weight: 700; border-radius: 14px; cursor: pointer;
   border: 3px solid transparent; text-decoration: none;
 }
-.btn-primary { background: var(--primary); color: var(--primary-text); width: 100%; }
-.btn-secondary { background: var(--bg); color: var(--text); border-color: var(--text); }
+.btn-primary { background: var(--ok); color: #ffffff; width: 100%; }
+.btn-primary:hover { background: #083d13; }
+.btn-secondary { background: var(--card); color: var(--ink); border-color: var(--ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .btn { transition: transform 120ms ease-out; }
+  .btn:active { transform: scale(0.98); }
+}
 
 /* Chaos attack (staging only): shrinks primary buttons so Kamla's persona must fail. */
 .chaos-tiny .btn-primary { min-height: 30px; height: 30px; padding: 2px 6px; font-size: 0.7rem; width: auto; }
 
-.notice { border-radius: var(--radius); padding: 16px; font-weight: 700; font-size: 1.15rem; display: flex; gap: 12px; align-items: center; }
+.notice { border-radius: var(--radius); padding: 16px 18px; font-weight: 700; font-size: 1.15rem; display: flex; gap: 12px; align-items: center; }
 .notice-ok { background: var(--ok-bg); color: var(--ok); border: 3px solid var(--ok); }
 .notice-error { background: var(--danger-bg); color: var(--danger); border: 3px solid var(--danger); }
 
 /* Forms */
-.field { display: grid; gap: 6px; margin-bottom: 18px; }
+.field { display: grid; gap: 6px; margin-bottom: 20px; }
 .field label, .field legend { font-weight: 700; font-size: 1.05rem; }
 .field input, .field select, .field textarea {
-  font: inherit; font-size: 1.1rem; min-height: 56px; padding: 10px 14px;
-  border: 3px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); width: 100%;
+  font: inherit; font-size: 1.1rem; min-height: 58px; padding: 10px 14px;
+  border: 2px solid var(--muted); border-radius: 12px; background: var(--card); color: var(--ink); width: 100%;
 }
 .field textarea { min-height: 120px; }
-fieldset.field { border: 0; padding: 0; margin: 0 0 18px; }
+fieldset.field { border: 0; padding: 0; margin: 0 0 20px; }
 .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .chip { position: relative; }
 .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .chip label {
-  display: flex; align-items: center; min-height: 64px; padding: 12px 16px;
-  border: 3px solid var(--border); border-radius: 12px; cursor: pointer; font-weight: 600;
+  display: flex; align-items: center; min-height: 68px; padding: 12px 18px;
+  border: 2px solid var(--line); border-radius: 14px; cursor: pointer; font-weight: 700; background: var(--card);
 }
-.chip input:checked + label { background: var(--text); color: var(--bg); }
+.chip label:hover { border-color: var(--indigo); }
+.chip input:checked + label { background: var(--indigo); border-color: var(--indigo); color: #ffffff; }
 .chip input:focus-visible + label { outline: 4px solid var(--focus); outline-offset: 3px; }
 
 /* Tables */
 table { border-collapse: collapse; width: 100%; font-size: 1rem; }
-th, td { text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--surface); }
+th, td { text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--paper); }
 th { font-weight: 700; }
-.big-number { font-size: 3rem; font-weight: 800; line-height: 1; margin: 8px 0; }
+.big-number { font-size: 3.2rem; font-weight: 700; line-height: 1; margin: 8px 0; font-variant-numeric: tabular-nums; }
 
-.card { border: 2px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: var(--gap); }
+.card { background: var(--card); border: 2px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: var(--gap); }
 
 @media (prefers-reduced-motion: no-preference) {
   .notice-ok { animation: pop 300ms ease-out; }
