@@ -125,7 +125,7 @@ Source: GitLab docs, Flow Registry v1 + custom flow schema (docs v19.6). Verify 
 - No response schemas → **when an agent's output drives a conditional router, the prompt must force the final answer to be exactly one keyword** (`APPROVE` / `CHANGES`, `PASS` / `FAIL`) and the router must include a `"default_route"` key **inside `condition.routes`** (a `default_route` sibling of `condition` is rejected by the schema).
 - Add `flow.inputs` with `agent_platform_standard_context` when you need `primary_branch`, `workload_branch`, or `session_owner_id`.
 - `context:goal` format depends on the trigger: Mention = `Input: …\nContext: {Issue IID: N}`; Assign = URL **or** IID (handle both); MR/Work item = `Context:\n<Type>: <url>\nAction: <action>`; Pipeline = **full webhook JSON**. Prompts must parse defensively.
-- Supervisor mode: `subagents` + `max_delegations` (always set a cap) and every sub-agent needs `description`.
+- Supervisor mode: `subagents: [{name: x}, …]` (names only) + `max_delegations` (always set a cap). Each sub-agent is its **own top-level `AgentComponent`** with `description`, `prompt_id` and `toolset`.
 - Use `ui_log_events: ["on_agent_final_answer","on_tool_execution_success","on_tool_execution_failed"]` so sessions are visible (judges look at these).
 - There is **no merge tool**. Don't try to merge from a flow.
 - Keep each flow file in `.gitlab/duo/flows/<name>.yaml` and record its AI Catalog ID + triggers in `docs/agents.md`. When you change YAML, tell Yash it must be re-pasted/updated in **AI → Flows** (the UI copy is what runs).

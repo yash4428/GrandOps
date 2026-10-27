@@ -4,6 +4,42 @@ version: "v1"
 environment: ambient
 coding_environment: full
 components:
+  - name: "developer"
+    type: AgentComponent
+    description: "Implements the code change for the issue's acceptance criteria. Reads AGENTS.md lessons first. Edits files in the working copy."
+    prompt_id: "developer_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["read_file", "edit_file", "create_file_with_contents", "find_files", "grep", "list_repository_tree", "get_repository_file"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+  - name: "tester"
+    type: AgentComponent
+    description: "Writes or updates Vitest unit tests and Playwright e2e tests for the acceptance criteria, then runs lint, typecheck, unit tests and build, and reports pass or fail."
+    prompt_id: "tester_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["read_file", "edit_file", "create_file_with_contents", "find_files", "grep", "run_command", "run_tests"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
+  - name: "persona_fixer"
+    type: AgentComponent
+    description: "Runs the five persona suites (pnpm personas) and fixes any violations (target size, text size, contrast, English leaks, axe issues, page weight) until they pass."
+    prompt_id: "persona_fixer_prompt"
+    model_size_preference: "large"
+    inputs:
+      - from: "context:goal"
+        as: "goal"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset: ["read_file", "edit_file", "find_files", "grep", "run_command"]
+    ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
   - name: "builder_supervisor"
     type: AgentComponent
     prompt_id: "builder_supervisor_prompt"
@@ -17,17 +53,8 @@ components:
     toolset: ["get_issue", "create_issue_note", "update_issue", "create_branch", "create_commit", "create_merge_request", "read_file", "find_files", "grep", "run_command"]
     subagents:
       - name: "developer"
-        description: "Implements the code change for the issue's acceptance criteria. Reads AGENTS.md lessons first. Edits files in the working copy."
-        prompt_id: "developer_prompt"
-        toolset: ["read_file", "edit_file", "create_file_with_contents", "find_files", "grep", "list_repository_tree", "get_repository_file"]
       - name: "tester"
-        description: "Writes or updates Vitest unit tests and Playwright e2e tests for the acceptance criteria, then runs lint, typecheck, unit tests and build, and reports pass or fail."
-        prompt_id: "tester_prompt"
-        toolset: ["read_file", "edit_file", "create_file_with_contents", "find_files", "grep", "run_command", "run_tests"]
       - name: "persona_fixer"
-        description: "Runs the five persona suites (pnpm personas) and fixes any violations (target size, text size, contrast, English leaks, axe issues, page weight) until they pass."
-        prompt_id: "persona_fixer_prompt"
-        toolset: ["read_file", "edit_file", "find_files", "grep", "run_command"]
     ui_log_events: ["on_agent_final_answer", "on_tool_execution_success", "on_tool_execution_failed"]
 prompts:
   - prompt_id: "builder_supervisor_prompt"
@@ -98,6 +125,7 @@ prompts:
         When the change is made, your final answer is a short list of the files you changed.
         No further steps are needed after that.
       user: |
+        Project ID: {{ project_id }}
         Task from supervisor: {{ goal }}
       placeholder: history
     params:
@@ -115,6 +143,7 @@ prompts:
         When all commands have run, your final answer is PASS or FAIL followed by the first
         failing command's last 30 lines of output if any. No further steps are needed after that.
       user: |
+        Project ID: {{ project_id }}
         Task from supervisor: {{ goal }}
       placeholder: history
     params:
@@ -132,6 +161,7 @@ prompts:
         When the personas pass or you have tried three times, your final answer is PASS or FAIL
         with the remaining violations. No further steps are needed after that.
       user: |
+        Project ID: {{ project_id }}
         Task from supervisor: {{ goal }}
       placeholder: history
     params:

@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { parse } from "yaml";
 
 interface Prompt { prompt_id: string; unit_primitives?: unknown; model?: unknown; prompt_template: { system: string; user: string; placeholder?: string }; params?: Record<string, unknown> }
-interface Component { name: string; type: string; prompt_id?: string; inputs?: { from: string; as: string }[]; toolset?: string[]; ui_log_events?: string[]; subagents?: { name: string; description?: string; prompt_id: string }[]; max_delegations?: number; response_schema_id?: unknown }
+interface Component { name: string; type: string; description?: string; prompt_id?: string; inputs?: { from: string; as: string }[]; toolset?: string[]; ui_log_events?: string[]; subagents?: { name: string }[]; max_delegations?: number; response_schema_id?: unknown }
 interface Flow { version: string; environment: string; components: Component[]; prompts: Prompt[]; routers: { from: string; to?: string; condition?: { input?: string; routes?: Record<string, string> } }[]; flow: { entry_point: string } }
 
 const GITLAB_TOOLS = /^(get_|list_|create_|update_|gitlab_|submit_|dismiss_|confirm_|link_|build_review|ci_linter)/;
@@ -24,7 +24,13 @@ export function lintFlow(file: string, text: string): string[] {
     if (!c.ui_log_events?.includes("on_agent_final_answer")) errs.push(`${c.name}: set ui_log_events`);
     if (c.subagents) {
       if (!c.max_delegations) errs.push(`${c.name}: supervisor needs max_delegations`);
-      for (const s of c.subagents) if (!s.description) errs.push(`${c.name}/${s.name}: sub-agent needs description`);
+      // Schema: each entry is only a name; the sub-agent is its own top-level AgentComponent with a description.
+      for (const s of c.subagents) {
+        if (Object.keys(s).some((k) => k !== "name")) errs.push(`${c.name}/${s.name}: subagents entries take only name`);
+        const target = d.components.find((x) => x.name === s.name);
+        if (!target || target.type !== "AgentComponent") errs.push(`${c.name}/${s.name}: sub-agent must be a top-level AgentComponent`);
+        else if (!target.description) errs.push(`${c.name}/${s.name}: sub-agent needs description`);
+      }
     }
     const aliases = new Set((c.inputs ?? []).map((i) => i.as));
     const usesGitlab = (c.toolset ?? []).some((t) => GITLAB_TOOLS.test(t));
@@ -35,7 +41,7 @@ export function lintFlow(file: string, text: string): string[] {
       for (const e of (raw.ui_log_events as string[] | undefined) ?? []) if (!["on_tool_call_input", "on_tool_execution_success", "on_tool_execution_failed"].includes(e)) errs.push(`${c.name}: ui_log_event ${e} not allowed on OneOffComponent`);
     }
     if (usesGitlab && !(c.inputs ?? []).some((i) => i.from === "context:project_id" && i.as === "project_id")) errs.push(`${c.name}: GitLab tools need context:project_id as project_id`);
-    for (const pid of [c.prompt_id, ...(c.subagents ?? []).map((s) => s.prompt_id)].filter(Boolean) as string[]) {
+    for (const pid of [c.prompt_id].filter(Boolean) as string[]) {
       const p = prompts.get(pid);
       if (!p) {
         errs.push(`${c.name}: prompt ${pid} missing`);
